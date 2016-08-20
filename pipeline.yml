@@ -1,0 +1,22 @@
+---
+jobs:
+- name: build
+  plan:
+  - get: maven-resource
+    trigger: true
+  - put: maven-resource-image
+    params: {build: maven-resource}
+
+resources:
+- name: maven-resource
+  type: git
+  source:
+    uri: {{git-uri}}
+    branch: {{git-branch}}
+
+- name: maven-resource-image
+  type: docker-image
+  source:
+    repository: {{docker-repository}}
+    username: {{docker-username}}
+    password: {{docker-password}}

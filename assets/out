@@ -1,0 +1,76 @@
+#!/bin/bash
+
+set -e
+
+exec 3>&1 # make stdout available as fd 3 for the result
+exec 1>&2 # redirect all output to stderr for logging
+
+source=$1
+
+if [ -z "$source" ]; then
+  echo "usage: $0 <path/to/source>"
+  exit 1
+fi
+
+# for jq
+PATH=/usr/local/bin:$PATH
+
+payload=$(mktemp $TMPDIR/maven-resource-request.XXXXXX)
+
+cat > $payload <&0
+
+url=$(jq -r '.source.url // ""' < $payload)
+username=$(jq -r '.source.username // ""' < $payload)
+password=$(jq -r '.source.password // ""' < $payload)
+file=$(jq -r '.params.file // ""' < $payload)
+pom=$(jq -r '.params.pom // ""' < $payload)
+groupId=$(jq -r '.params.groupId // ""' < $payload)
+artifactId=$(jq -r '.params.artifactId // ""' < $payload)
+version=$(jq -r '.params.version // ""' < $payload)
+packaging=$(jq -r '.params.packaging // ""' < $payload)
+
+if [ -z "$url" ]; then
+  echo "invalid payload (missing url)"
+  exit 1
+fi
+
+if [ -z "$file" ]; then
+  echo "invalid payload (missing file)"
+  exit 1
+fi
+
+if [ -z "$version" ] && [ ! -z "$pom" ]; then
+  version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
+fi
+
+cd $source
+
+# mvn deploy:deploy-file -Dfile=$file \
+#                        -Durl=$url \
+#                        -DgroupId=$groupId \
+#                        -DartifactId=$artifactId \
+#                        -Dversion=$version \
+#                        -Dpackaging=$packaging
+
+if [ -z "$pom" ]; then
+  mvn -s $(dirname $0)/.m2/settings.xml deploy:deploy-file \
+      -Dfile=$file \
+      -Durl=$url \
+      -DgroupId=$groupId \
+      -DartifactId=$artifactId \
+      -Dversion=$version \
+      -Dpackaging=$packaging \
+      -Drepository.username=$username \
+      -Drepository.password=$password
+else
+  mvn -s $(dirname $0)/.m2/settings.xml deploy:deploy-file \
+      -Dfile=$file \
+      -Durl=$url \
+      -DpomFile=$pom \
+      -Drepository.username=$username \
+      -Drepository.password=$password
+fi
+
+jq -n "{
+  version: {version: $(echo $version | jq -R .)}
+}" >&3

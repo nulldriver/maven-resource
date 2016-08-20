@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -e
+
+echo '{"version":{"ref":"none"}}'
+
+#mvn dependency:copy -Dartifact=commons-logging:commons-logging:1.1.1 -DremoteRepositories=http://nexus.anvil.pcfdemo.com/repository/maven-public/ -DoutputDirectory=.
