@@ -1,8 +1,10 @@
 FROM openjdk:8-jdk-alpine
 
-RUN apk add --no-cache wget curl tar bash jq
+# libxml2-utils required for xmllint
+RUN apk add --no-cache wget curl tar bash jq libxml2-utils
 
-ADD assets /opt/resource/
+ADD assets/ /opt/resource/
+ADD test/ /opt/resource-tests/
 
 ARG MAVEN_VERSION=3.3.9
 
@@ -23,7 +25,5 @@ RUN cd /tmp \
 RUN cd /tmp \
   && rm apache-maven-$MAVEN_VERSION-bin.tar.gz apache-maven-$MAVEN_VERSION-bin.tar.gz.md5
 
-# Seed .m2/repository
-COPY m2-seed-pom.xml /tmp/m2-seed/pom.xml
-RUN cd /tmp/m2-seed \
-  && mvn clean package
+# Run tests (also pre-seeds .m2/repository)
+RUN /opt/resource-tests/test-out.sh
