@@ -13,6 +13,7 @@ resources:
   source:
     uri: {{git-uri}}
     branch: {{git-branch}}
+    private_key: {{github-private-key}}
 
 - name: maven-resource-image
   type: docker-image
