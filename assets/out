@@ -28,6 +28,8 @@ groupId=$(jq -r '.params.groupId // ""' < $payload)
 artifactId=$(jq -r '.params.artifactId // ""' < $payload)
 version=$(jq -r '.params.version // ""' < $payload)
 packaging=$(jq -r '.params.packaging // ""' < $payload)
+MAVEN_OPTS=$(jq -r '.params.maven_opts // ""' < $payload)
+MAVEN_CONFIG=$(jq -r '.params.maven_config // ""' < $payload)
 
 if [ -z "$url" ]; then
   echo "invalid payload (missing url)"
@@ -45,7 +47,7 @@ fi
 
 cd $source
 
-# mvn deploy:deploy-file -Dfile=$file \
+# mvn -s $(dirname $0)/.m2/settings.xml deploy:deploy-file -Dfile=$file \
 #                        -Durl=$url \
 #                        -DgroupId=$groupId \
 #                        -DartifactId=$artifactId \
@@ -53,7 +55,7 @@ cd $source
 #                        -Dpackaging=$packaging
 
 if [ -z "$pom" ]; then
-  mvn -s $(dirname $0)/.m2/settings.xml deploy:deploy-file \
+  mvn deploy:deploy-file \
       -Dfile=$file \
       -Durl=$url \
       -DgroupId=$groupId \
@@ -63,7 +65,7 @@ if [ -z "$pom" ]; then
       -Drepository.username=$username \
       -Drepository.password=$password
 else
-  mvn -s $(dirname $0)/.m2/settings.xml deploy:deploy-file \
+  mvn deploy:deploy-file \
       -Dfile=$file \
       -Durl=$url \
       -DpomFile=$pom \
