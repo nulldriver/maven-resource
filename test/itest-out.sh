@@ -4,13 +4,35 @@ set -e
 
 source $(dirname $0)/helpers.sh
 
+#export MAVEN_RELEASES_URL=http://myrepo.com/repository/releases/
+#export MAVEN_SNAPSHOTS_URL=http://myrepo.com/repository/snapshots/
+#export MAVEN_REPO_USERNAME=username
+#export MAVEN_REPO_PASSWORD=password
+
+if [ -z "$MAVEN_RELEASES_URL" ]; then
+  echo "Maven Releases Repo URL: "
+  read -r MAVEN_RELEASES_URL
+fi
+if [ -z "$MAVEN_SNAPSHOTS_URL" ]; then
+  echo "Maven Snapshots Repo URL: "
+  read -r MAVEN_SNAPSHOTS_URL
+fi
+if [ -z "$MAVEN_REPO_USERNAME" ]; then
+  echo "Maven Repo Username: "
+  read -r MAVEN_REPO_USERNAME
+fi
+if [ -z "$MAVEN_REPO_PASSWORD" ]; then
+  echo "Maven Repo Password: "
+  read -r MAVEN_REPO_PASSWORD
+fi
+
 it_can_deploy_release_to_manager_without_pom() {
 
   local src=$(mktemp -d $TMPDIR/out-src.XXXXXX)
-  local url=http://nexus.anvil.pcfdemo.com/repository/maven-ci-release/
+  local url=$MAVEN_RELEASES_URL
   local version=1.0.0-rc.0
-  local username=concourse
-  local password=password
+  local username=$MAVEN_REPO_USERNAME
+  local password=$MAVEN_REPO_PASSWORD
 
   deploy_without_pom $url $version $username $password $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
@@ -21,9 +43,10 @@ it_can_deploy_snapshot_to_manager_without_pom() {
 
   local src=$(mktemp -d $TMPDIR/out-src.XXXXXX)
   local url=http://nexus.anvil.pcfdemo.com/repository/maven-ci-snapshots/
+  local url=$MAVEN_SNAPSHOTS_URL
   local version=1.0.0-rc.0-SNAPSHOT
-  local username=concourse
-  local password=password
+  local username=$MAVEN_REPO_USERNAME
+  local password=$MAVEN_REPO_PASSWORD
 
   deploy_without_pom $url $version $username $password $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
@@ -37,11 +60,11 @@ it_can_deploy_release_to_manager_with_pom() {
   mkdir $src/project
   cp $(dirname $0)/resources/pom-release.xml $src/project/pom.xml
 
-  local url=http://nexus.anvil.pcfdemo.com/repository/maven-ci-release/
+  local url=$MAVEN_RELEASES_URL
   local pom=$src/project/pom.xml
   local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
-  local username=concourse
-  local password=password
+  local username=$MAVEN_REPO_USERNAME
+  local password=$MAVEN_REPO_PASSWORD
 
   deploy_with_pom $url $pom $username $password $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
@@ -55,11 +78,11 @@ it_can_deploy_snapshot_to_manager_with_pom() {
   mkdir $src/project
   cp $(dirname $0)/resources/pom-snapshot.xml $src/project/pom.xml
 
-  local url=http://nexus.anvil.pcfdemo.com/repository/maven-ci-snapshots/
+  local url=$MAVEN_SNAPSHOTS_URL
   local pom=$src/project/pom.xml
   local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
-  local username=concourse
-  local password=password
+  local username=$MAVEN_REPO_USERNAME
+  local password=$MAVEN_REPO_PASSWORD
 
   deploy_with_pom $url $pom $username $password $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
