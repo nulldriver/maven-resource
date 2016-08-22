@@ -59,9 +59,9 @@ jobs:
   - put: milestone
     params:
       file: build-output/myartifact-*.jar
+      version_file: version/number
       groupId: com.mygroup
       artifactId: myartifact
-      version_file: version/number
       packaging: jar
   - put: version
     params: { file: version/number }
@@ -87,14 +87,10 @@ Deploy the artifact to the Maven Repository Manager.
 
 * `file`: *Required.* The path to the artifact to deploy.
 
-* `pom`: *Optional.* The path to the pom.xml file to use for the `groupId`, `artifactId`, `packaging`, and `version`.
+* `version_file`: *Required.* The path to the version file
 
-  *Note:* Specifying any of the below `groupId`, `artifactId`, `packaging`, or `version_file` parameters will override the value found in the pom.xml file.
+* `groupId`: *Required.* The groupId of the artifact
 
-* `version_file`: *Optional.* The path to the version file (*Required.* if not using `pom` file)
+* `artifactId`: *Required.* The artifactId of the artifact
 
-* `groupId`: *Optional.* The groupId of the artifact (*Required.* if not using `pom` file)
-
-* `artifactId`: *Optional.* The artifactId of the artifact (*Required.* if not using `pom` file)
-
-* `packaging`: *Optional.* The packaging of the artifact (*Required.* if not using `pom` file)
+* `packaging`: *Required.* The packaging of the artifact
