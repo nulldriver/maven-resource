@@ -12,6 +12,8 @@ if [ -z "$source" ]; then
   exit 1
 fi
 
+cd $source
+
 # for jq
 PATH=/usr/local/bin:$PATH
 
@@ -26,7 +28,7 @@ file=$(jq -r '.params.file // ""' < $payload)
 pom=$(jq -r '.params.pom // ""' < $payload)
 groupId=$(jq -r '.params.groupId // ""' < $payload)
 artifactId=$(jq -r '.params.artifactId // ""' < $payload)
-version=$(jq -r '.params.version // ""' < $payload)
+version_file=$(jq -r '.params.version_file // ""' < $payload)
 packaging=$(jq -r '.params.packaging // ""' < $payload)
 MAVEN_OPTS=$(jq -r '.params.maven_opts // ""' < $payload)
 MAVEN_CONFIG=$(jq -r '.params.maven_config // ""' < $payload)
@@ -41,11 +43,12 @@ if [ -z "$file" ]; then
   exit 1
 fi
 
-if [ -z "$version" ] && [ ! -z "$pom" ]; then
+version=
+if [ -f "$version_file" ]; then
+  version=$(cat $version_file)
+elif [ -f "$pom" ]; then
   version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
 fi
-
-cd $source
 
 # mvn -s $(dirname $0)/.m2/settings.xml deploy:deploy-file -Dfile=$file \
 #                        -Durl=$url \

@@ -21,6 +21,40 @@ run() {
   echo ""
 }
 
+create_version_file() {
+  local version=$1
+  local src=$2
+
+  mkdir $src/version
+  echo "$version" > $src/version/number
+
+  echo version/number
+}
+
+deploy_without_pomX() {
+
+  local args=$1
+
+  local url=$(echo $args | jq -r '.url // ""')
+  local version=$(echo $args | jq -r '.version // ""')
+  local src=$(echo $args | jq -r '.src // ""')
+
+  local version_file=$(create_version_file "$version" "$src")
+
+  jq -n "{
+    params: {
+      file: $(echo $file | jq -R .),
+      groupId: $(echo $groupId | jq -R .),
+      artifactId: $(echo $artifactId | jq -R .),
+      version_file: $(echo $version_file | jq -R .),
+      packaging: $(echo $packaging | jq -R .)
+    },
+    source: {
+      url: $(echo $url | jq -R .)
+    }
+  }"
+}
+
 deploy_without_pom() {
 
   local url=$1
@@ -28,6 +62,8 @@ deploy_without_pom() {
   local username=$3
   local password=$4
   local src=$5
+
+  local version_file=$(create_version_file "$version" "$src")
 
   local groupId=org.some.group
   local artifactId=your-artifact
@@ -43,7 +79,7 @@ deploy_without_pom() {
       file: $(echo $file | jq -R .),
       groupId: $(echo $groupId | jq -R .),
       artifactId: $(echo $artifactId | jq -R .),
-      version: $(echo $version | jq -R .),
+      version_file: $(echo $version_file | jq -R .),
       packaging: $(echo $packaging | jq -R .)
     },
     source: {
