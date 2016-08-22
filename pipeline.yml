@@ -6,6 +6,7 @@ jobs:
     trigger: true
   - put: maven-resource-image
     params: {build: maven-resource}
+  - put: tracker
 
 resources:
 - name: maven-resource
@@ -21,3 +22,10 @@ resources:
     repository: {{docker-repository}}
     username: {{docker-username}}
     password: {{docker-password}}
+
+- name: tracker
+  type: tracker
+  source:
+    token: {{tracker-api-token}}
+    project_id: {{tracker-project-id}}
+    tracker_url: {{tracker-url}}
