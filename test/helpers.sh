@@ -89,13 +89,13 @@ deploy_without_pom_with_credentials() {
       "groupId": "$groupId",
       "artifactId": "$artifactId",
       "version_file": "$version_file",
-      "packaging": "$packaging",
-      "repository_cert": "$repository_cert"
+      "packaging": "$packaging"
     },
     "source": {
       "url": "$url",
       "username": "$username",
-      "password": "$password"
+      "password": "$password",
+      "repository_cert": "$repository_cert"
     }
   }
 EOF
@@ -151,13 +151,13 @@ deploy_with_pom_with_credentials() {
   {
     "params": {
       "file": "$file",
-      "pom": "$pom",
-      "repository_cert": "$repository_cert"
+      "pom": "$pom"
     },
     "source": {
       "url": "$url",
       "username": "$username",
-      "password": "$password"
+      "password": "$password",
+      "repository_cert": "$repository_cert"
     }
   }
 EOF

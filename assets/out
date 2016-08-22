@@ -24,13 +24,14 @@ cat > $payload <&0
 url=$(jq -r '.source.url // ""' < $payload)
 username=$(jq -r '.source.username // ""' < $payload)
 password=$(jq -r '.source.password // ""' < $payload)
+repository_cert=$(jq -r '.source.repository_cert // ""' < $payload)
+
 file=$(jq -r '.params.file // ""' < $payload)
 pom=$(jq -r '.params.pom // ""' < $payload)
 groupId=$(jq -r '.params.groupId // ""' < $payload)
 artifactId=$(jq -r '.params.artifactId // ""' < $payload)
 version_file=$(jq -r '.params.version_file // ""' < $payload)
 packaging=$(jq -r '.params.packaging // ""' < $payload)
-repository_cert=$(jq -r '.params.repository_cert // ""' < $payload)
 MAVEN_OPTS=$(jq -r '.params.maven_opts // ""' < $payload)
 MAVEN_CONFIG=$(jq -r '.params.maven_config // ""' < $payload)
 
