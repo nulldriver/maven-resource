@@ -42,11 +42,11 @@ deploy_without_pom_without_credentials() {
   local groupId=org.some.group
   local artifactId=your-artifact
   local packaging=jar
-  local file=build-output/$artifactId-$version.$packaging
+  local file=build-output/$artifactId-*.$packaging
 
   # Mock the jar
   mkdir $src/build-output
-  touch $src/$file
+  touch $src/build-output/$artifactId-$version.$packaging
 
   jq -n "{
     params: {
@@ -75,11 +75,11 @@ deploy_without_pom_with_credentials() {
   local groupId=org.some.group
   local artifactId=your-artifact
   local packaging=jar
-  local file=build-output/$artifactId-$version.$packaging
+  local file=build-output/$artifactId-*.$packaging
 
   # Mock the jar
   mkdir $src/build-output
-  touch $src/$file
+  touch $src/build-output/$artifactId-$version.$packaging
 
   jq -n "{
     params: {
@@ -107,11 +107,11 @@ deploy_with_pom_without_credentials() {
   local packaging=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='packaging']/text()" $pom)
   local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
 
-  local file=build-output/$artifactId-$version.$packaging
+  local file=build-output/$artifactId-*.$packaging
 
   # Mock the jar
   mkdir $src/build-output
-  touch $src/$file
+  touch $src/build-output/$artifactId-$version.$packaging
 
   jq -n "{
     params: {
@@ -136,11 +136,11 @@ deploy_with_pom_with_credentials() {
   local packaging=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='packaging']/text()" $pom)
   local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
 
-  local file=build-output/$artifactId-$version.$packaging
+  local file=build-output/$artifactId-*.$packaging
 
   # Mock the jar
   mkdir $src/build-output
-  touch $src/$file
+  touch $src/build-output/$artifactId-$version.$packaging
 
   jq -n "{
     params: {
