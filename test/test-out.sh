@@ -20,7 +20,7 @@ it_can_deploy_release_to_folder_without_pom() {
   "
 }
 
-it_can_deploy_snapshot_to_manager_without_pom() {
+it_can_deploy_snapshot_to_folder_without_pom() {
 
   local src=$(mktemp -d $TMPDIR/out-src.XXXXXX)
   mkdir $src/m2-repo
@@ -77,6 +77,6 @@ it_can_deploy_snapshot_to_folder_with_pom() {
 }
 
 run it_can_deploy_release_to_folder_without_pom
-run it_can_deploy_snapshot_to_manager_without_pom
+run it_can_deploy_snapshot_to_folder_without_pom
 run it_can_deploy_release_to_folder_with_pom
 run it_can_deploy_snapshot_to_folder_with_pom
