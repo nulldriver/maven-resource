@@ -52,13 +52,6 @@ elif [ -f "$pom" ]; then
   version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
 fi
 
-# mvn -s $(dirname $0)/.m2/settings.xml deploy:deploy-file -Dfile=$file \
-#                        -Durl=$url \
-#                        -DgroupId=$groupId \
-#                        -DartifactId=$artifactId \
-#                        -Dversion=$version \
-#                        -Dpackaging=$packaging
-
 args=
 args="$args -Dfile=$file"
 args="$args -Durl=$url"
