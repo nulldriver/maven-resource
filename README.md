@@ -37,11 +37,11 @@ resources:
     username: myuser
     password: mypass
     repository_cert: |
-      -----BEGIN RSA PRIVATE KEY-----
+      -----BEGIN CERTIFICATE-----
       MIIEowIBAAKCAQEAtCS10/f7W7lkQaSgD/mVeaSOvSF9ql4hf/zfMwfVGgHWjj+W
       <Lots more text>
       DWiJL+OFeg9kawcUL6hQ8JeXPhlImG6RTUffma9+iGQyyBMCGd1l
-      -----END RSA PRIVATE KEY-----
+      -----END CERTIFICATE-----
 ```
 
 Deploying an artifact build by Maven
