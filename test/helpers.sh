@@ -68,7 +68,8 @@ deploy_without_pom_with_credentials() {
   local version=$2
   local username=$3
   local password=$4
-  local src=$5
+  local repository_cert=$(echo "$5" | awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}')
+  local src=$6
 
   local version_file=$(create_version_file "$version" "$src")
 
@@ -81,20 +82,23 @@ deploy_without_pom_with_credentials() {
   mkdir $src/build-output
   touch $src/build-output/$artifactId-$version.$packaging
 
-  jq -n "{
-    params: {
-      file: $(echo $file | jq -R .),
-      groupId: $(echo $groupId | jq -R .),
-      artifactId: $(echo $artifactId | jq -R .),
-      version_file: $(echo $version_file | jq -R .),
-      packaging: $(echo $packaging | jq -R .)
+  cat <<EOF | $resource_dir/out "$src" | tee /dev/stderr
+  {
+    "params": {
+      "file": "$file",
+      "groupId": "$groupId",
+      "artifactId": "$artifactId",
+      "version_file": "$version_file",
+      "packaging": "$packaging",
+      "repository_cert": "$repository_cert"
     },
-    source: {
-      url: $(echo $url | jq -R .),
-      username: $(echo $username | jq -R .),
-      password: $(echo $password | jq -R .)
+    "source": {
+      "url": "$url",
+      "username": "$username",
+      "password": "$password"
     }
-  }" | $resource_dir/out "$src" | tee /dev/stderr
+  }
+EOF
 }
 
 deploy_with_pom_without_credentials() {
@@ -130,7 +134,8 @@ deploy_with_pom_with_credentials() {
   local pom=$2
   local username=$3
   local password=$4
-  local src=$5
+  local repository_cert=$(echo "$5" | awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}')
+  local src=$6
 
   local artifactId=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='artifactId']/text()" $pom)
   local packaging=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='packaging']/text()" $pom)
@@ -142,15 +147,18 @@ deploy_with_pom_with_credentials() {
   mkdir $src/build-output
   touch $src/build-output/$artifactId-$version.$packaging
 
-  jq -n "{
-    params: {
-      file: $(echo $file | jq -R .),
-      pom: $(echo $pom | jq -R .)
+  cat <<EOF | $resource_dir/out "$src" | tee /dev/stderr
+  {
+    "params": {
+      "file": "$file",
+      "pom": "$pom",
+      "repository_cert": "$repository_cert"
     },
-    source: {
-      url: $(echo $url | jq -R .),
-      username: $(echo $username | jq -R .),
-      password: $(echo $password | jq -R .)
+    "source": {
+      "url": "$url",
+      "username": "$username",
+      "password": "$password"
     }
-  }" | $resource_dir/out "$src" | tee /dev/stderr
+  }
+EOF
 }

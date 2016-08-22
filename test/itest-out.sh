@@ -9,6 +9,7 @@ source $(dirname $0)/helpers.sh
 #export MAVEN_SNAPSHOTS_URL=http://myrepo.com/repository/snapshots/
 #export MAVEN_REPO_USERNAME=username
 #export MAVEN_REPO_PASSWORD=password
+#export MAVEN_REPOSITORY_CERT=$(cat /path/to/cert)
 
 if [ -z "$MAVEN_RELEASES_URL" ]; then
   echo "Maven Releases Repo URL: "
@@ -34,8 +35,9 @@ it_can_deploy_release_to_manager_without_pom() {
   local version=1.0.0-rc.0
   local username=$MAVEN_REPO_USERNAME
   local password=$MAVEN_REPO_PASSWORD
+  local repository_cert=$MAVEN_REPOSITORY_CERT
 
-  deploy_without_pom_with_credentials $url $version $username $password $src | jq -e "
+  deploy_without_pom_with_credentials $url $version $username $password "$repository_cert" $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
   "
 }
@@ -47,8 +49,9 @@ it_can_deploy_snapshot_to_manager_without_pom() {
   local version=1.0.0-rc.0-SNAPSHOT
   local username=$MAVEN_REPO_USERNAME
   local password=$MAVEN_REPO_PASSWORD
+  local repository_cert=$MAVEN_REPOSITORY_CERT
 
-  deploy_without_pom_with_credentials $url $version $username $password $src | jq -e "
+  deploy_without_pom_with_credentials $url $version $username $password "$repository_cert" $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
   "
 }
@@ -65,8 +68,9 @@ it_can_deploy_release_to_manager_with_pom() {
   local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
   local username=$MAVEN_REPO_USERNAME
   local password=$MAVEN_REPO_PASSWORD
+  local repository_cert=$MAVEN_REPOSITORY_CERT
 
-  deploy_with_pom_with_credentials $url $pom $username $password $src | jq -e "
+  deploy_with_pom_with_credentials $url $pom $username $password "$repository_cert" $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
   "
 }
@@ -83,8 +87,9 @@ it_can_deploy_snapshot_to_manager_with_pom() {
   local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
   local username=$MAVEN_REPO_USERNAME
   local password=$MAVEN_REPO_PASSWORD
+  local repository_cert=$MAVEN_REPOSITORY_CERT
 
-  deploy_with_pom_with_credentials $url $pom $username $password $src | jq -e "
+  deploy_with_pom_with_credentials $url $pom $username $password "$repository_cert" $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
   "
 }

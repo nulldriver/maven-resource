@@ -30,9 +30,12 @@ groupId=$(jq -r '.params.groupId // ""' < $payload)
 artifactId=$(jq -r '.params.artifactId // ""' < $payload)
 version_file=$(jq -r '.params.version_file // ""' < $payload)
 packaging=$(jq -r '.params.packaging // ""' < $payload)
-#MAVEN_OPTS=$(jq -r '.params.maven_opts // ""' < $payload)
-#MAVEN_CONFIG=$(jq -r '.params.maven_config // ""' < $payload)
-MAVEN_CONFIG="-s $(dirname $0)/.m2/settings.xml"
+repository_cert=$(jq -r '.params.repository_cert // ""' < $payload)
+MAVEN_OPTS=$(jq -r '.params.maven_opts // ""' < $payload)
+MAVEN_CONFIG=$(jq -r '.params.maven_config // ""' < $payload)
+
+# Use ours if user didn't specify
+[ -z "$MAVEN_CONFIG" ] && MAVEN_CONFIG="-s $(dirname $0)/.m2/settings.xml"
 
 if [ -z "$url" ]; then
   echo "invalid payload (missing url)"
@@ -52,6 +55,15 @@ elif [ -f "$pom" ]; then
   version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
 fi
 
+if [ -n "$repository_cert" ]; then
+  mkdir $source/ssl
+  echo "$repository_cert" > $source/ssl/repository.crt
+  #cat $source/ssl/repository.crt >/dev/stderr
+  keytool -import -file $source/ssl/repository.crt -alias CAAlias -keystore $source/ssl/truststore.jks -storepass changeit -noprompt
+  MAVEN_OPTS="$MAVEN_OPTS -Djavax.net.ssl.trustStore=$source/ssl/truststore.jks \
+                          -Djavax.net.ssl.trustStorePassword=changeit"
+fi
+
 args=
 args="$args -Dfile=$file"
 args="$args -Durl=$url"
@@ -68,7 +80,7 @@ fi
 [ -n "$username" ] && args="$args -Drepository.username=$username";
 [ -n "$password" ] && args="$args -Drepository.password=$password";
 
-mvn $MAVEN_CONFIG deploy:deploy-file $args
+mvn $MAVEN_CONFIG $MAVEN_OPTS deploy:deploy-file $args
 
 jq -n "{
   version: {version: $(echo $version | jq -R .)}
