@@ -7,6 +7,9 @@ jobs:
   - put: maven-resource-image
     params: {build: maven-resource}
   - put: tracker
+    params:
+      repos:
+        - maven-resource
 
 resources:
 - name: maven-resource
