@@ -43,6 +43,7 @@ if [ -z "$file" ]; then
   echo "invalid payload (missing file)"
   exit 1
 fi
+file=$(ls $file)
 
 version=
 if [ -f "$version_file" ]; then
