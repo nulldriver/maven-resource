@@ -31,15 +31,22 @@ create_version_file() {
   echo version/number
 }
 
-deploy_without_pomX() {
+deploy_without_pom_without_credentials() {
 
-  local args=$1
-
-  local url=$(echo $args | jq -r '.url // ""')
-  local version=$(echo $args | jq -r '.version // ""')
-  local src=$(echo $args | jq -r '.src // ""')
+  local url=$1
+  local version=$2
+  local src=$3
 
   local version_file=$(create_version_file "$version" "$src")
+
+  local groupId=org.some.group
+  local artifactId=your-artifact
+  local packaging=jar
+  local file=build-output/$artifactId-$version.$packaging
+
+  # Mock the jar
+  mkdir $src/build-output
+  touch $src/$file
 
   jq -n "{
     params: {
@@ -52,10 +59,10 @@ deploy_without_pomX() {
     source: {
       url: $(echo $url | jq -R .)
     }
-  }"
+  }" | $resource_dir/out "$src" | tee /dev/stderr
 }
 
-deploy_without_pom() {
+deploy_without_pom_with_credentials() {
 
   local url=$1
   local version=$2
@@ -90,7 +97,34 @@ deploy_without_pom() {
   }" | $resource_dir/out "$src" | tee /dev/stderr
 }
 
-deploy_with_pom() {
+deploy_with_pom_without_credentials() {
+
+  local url=$1
+  local pom=$2
+  local src=$3
+
+  local artifactId=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='artifactId']/text()" $pom)
+  local packaging=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='packaging']/text()" $pom)
+  local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
+
+  local file=build-output/$artifactId-$version.$packaging
+
+  # Mock the jar
+  mkdir $src/build-output
+  touch $src/$file
+
+  jq -n "{
+    params: {
+      file: $(echo $file | jq -R .),
+      pom: $(echo $pom | jq -R .)
+    },
+    source: {
+      url: $(echo $url | jq -R .)
+    }
+  }" | $resource_dir/out "$src" | tee /dev/stderr
+}
+
+deploy_with_pom_with_credentials() {
 
   local url=$1
   local pom=$2

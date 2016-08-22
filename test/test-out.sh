@@ -11,11 +11,8 @@ it_can_deploy_release_to_folder_without_pom() {
 
   local url=file://$src/m2-repo
   local version=1.0.0-rc.0
-  # TODO: Remove username/pass for folder test
-  local username=concourse
-  local password=password
 
-  deploy_without_pom $url $version $username $password $src | jq -e "
+  deploy_without_pom_without_credentials $url $version $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
   "
 }
@@ -27,11 +24,8 @@ it_can_deploy_snapshot_to_folder_without_pom() {
 
   local url=file://$src/m2-repo
   local version=1.0.0-rc.0-SNAPSHOT
-  # TODO: Remove username/pass for folder test
-  local username=concourse
-  local password=password
 
-  deploy_without_pom $url $version $username $password $src | jq -e "
+  deploy_without_pom_without_credentials $url $version $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
   "
 }
@@ -48,10 +42,8 @@ it_can_deploy_release_to_folder_with_pom() {
   local url=file://$src/m2-repo
   local pom=$src/project/pom.xml
   local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
-  local username=concourse
-  local password=password
 
-  deploy_with_pom $url $pom $username $password $src | jq -e "
+  deploy_with_pom_without_credentials $url $pom $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
   "
 }
@@ -68,10 +60,8 @@ it_can_deploy_snapshot_to_folder_with_pom() {
   local url=file://$src/m2-repo
   local pom=$src/project/pom.xml
   local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
-  local username=concourse
-  local password=password
 
-  deploy_with_pom $url $pom $username $password $src | jq -e "
+  deploy_with_pom_without_credentials $url $pom $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
   "
 }

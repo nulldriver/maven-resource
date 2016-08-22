@@ -35,7 +35,7 @@ it_can_deploy_release_to_manager_without_pom() {
   local username=$MAVEN_REPO_USERNAME
   local password=$MAVEN_REPO_PASSWORD
 
-  deploy_without_pom $url $version $username $password $src | jq -e "
+  deploy_without_pom_with_credentials $url $version $username $password $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
   "
 }
@@ -43,13 +43,12 @@ it_can_deploy_release_to_manager_without_pom() {
 it_can_deploy_snapshot_to_manager_without_pom() {
 
   local src=$(mktemp -d $TMPDIR/out-src.XXXXXX)
-  local url=http://nexus.anvil.pcfdemo.com/repository/maven-ci-snapshots/
   local url=$MAVEN_SNAPSHOTS_URL
   local version=1.0.0-rc.0-SNAPSHOT
   local username=$MAVEN_REPO_USERNAME
   local password=$MAVEN_REPO_PASSWORD
 
-  deploy_without_pom $url $version $username $password $src | jq -e "
+  deploy_without_pom_with_credentials $url $version $username $password $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
   "
 }
@@ -67,7 +66,7 @@ it_can_deploy_release_to_manager_with_pom() {
   local username=$MAVEN_REPO_USERNAME
   local password=$MAVEN_REPO_PASSWORD
 
-  deploy_with_pom $url $pom $username $password $src | jq -e "
+  deploy_with_pom_with_credentials $url $pom $username $password $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
   "
 }
@@ -85,7 +84,7 @@ it_can_deploy_snapshot_to_manager_with_pom() {
   local username=$MAVEN_REPO_USERNAME
   local password=$MAVEN_REPO_PASSWORD
 
-  deploy_with_pom $url $pom $username $password $src | jq -e "
+  deploy_with_pom_with_credentials $url $pom $username $password $src | jq -e "
     .version == {version: $(echo $version | jq -R .)}
   "
 }
