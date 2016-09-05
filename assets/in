@@ -25,10 +25,10 @@ uri=$(jq -r '.source.artifact // ""' < $payload)
 
 # groupId:artifactId:type[:classifier]
 # com.aviato:aviato-profile:jar:jdk6
-groupId=(echo $artifact | cut -d ":" -f 1)
-artifactId=(echo $artifact | cut -d ":" -f 2)
-packaging=(echo $artifact | cut -d ":" -f 3)
-classifier=(echo $artifact | cut -d ":" -f 4)
+groupId=$(echo $artifact | cut -d ":" -f 1)
+artifactId=$(echo $artifact | cut -d ":" -f 2)
+packaging=$(echo $artifact | cut -d ":" -f 3)
+classifier=$(echo $artifact | cut -d ":" -f 4)
 
 # mvn dependency:copy \
 #     -Dartifact=commons-logging:commons-logging:1.1.1 \
