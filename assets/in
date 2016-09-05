@@ -2,6 +2,37 @@
 
 set -e
 
-echo '{"version":{"ref":"none"}}'
+exec 3>&1 # make stdout available as fd 3 for the result
+exec 1>&2 # redirect all output to stderr for logging
 
-#mvn dependency:copy -Dartifact=commons-logging:commons-logging:1.1.1 -DremoteRepositories=http://nexus.anvil.pcfdemo.com/repository/maven-public/ -DoutputDirectory=.
+destination=$1
+
+if [ -z "$destination" ]; then
+  echo "usage: $0 <path/to/destination>" >&2
+  exit 1
+fi
+
+# for jq
+PATH=/usr/local/bin:$PATH
+
+payload=$(mktemp $TMPDIR/git-resource-request.XXXXXX)
+
+cat > $payload <&0
+
+echo "payload=$payload"
+
+uri=$(jq -r '.source.artifact // ""' < $payload)
+
+# groupId:artifactId:type[:classifier]
+# com.aviato:aviato-profile:jar:jdk6
+groupId=(echo $artifact | cut -d ":" -f 1)
+artifactId=(echo $artifact | cut -d ":" -f 2)
+packaging=(echo $artifact | cut -d ":" -f 3)
+classifier=(echo $artifact | cut -d ":" -f 4)
+
+# mvn dependency:copy \
+#     -Dartifact=commons-logging:commons-logging:1.1.1 \
+#     -DremoteRepositories=http://nexus.anvil.pcfdemo.com/repository/maven-public/ \
+#     -DoutputDirectory=.
+
+echo '{"version":{"artifact":"none"}}'
