@@ -42,7 +42,9 @@ deploy_without_pom_without_credentials() {
   local groupId=org.some.group
   local artifactId=your-artifact
   local packaging=jar
+
   local file=build-output/$artifactId-*.$packaging
+  local artifact=$groupId:$artifactId:$packaging
 
   # Mock the jar
   mkdir $src/build-output
@@ -51,13 +53,11 @@ deploy_without_pom_without_credentials() {
   jq -n "{
     params: {
       file: $(echo $file | jq -R .),
-      groupId: $(echo $groupId | jq -R .),
-      artifactId: $(echo $artifactId | jq -R .),
-      version_file: $(echo $version_file | jq -R .),
-      packaging: $(echo $packaging | jq -R .)
+      version_file: $(echo $version_file | jq -R .)
     },
     source: {
-      url: $(echo $url | jq -R .)
+      url: $(echo $url | jq -R .),
+      artifact: $(echo $artifact | jq -R .)
     }
   }" | $resource_dir/out "$src" | tee /dev/stderr
 }
@@ -76,7 +76,9 @@ deploy_without_pom_with_credentials() {
   local groupId=org.some.group
   local artifactId=your-artifact
   local packaging=jar
+
   local file=build-output/$artifactId-*.$packaging
+  local artifact=$groupId:$artifactId:$packaging
 
   # Mock the jar
   mkdir $src/build-output
@@ -86,13 +88,11 @@ deploy_without_pom_with_credentials() {
   {
     "params": {
       "file": "$file",
-      "groupId": "$groupId",
-      "artifactId": "$artifactId",
-      "version_file": "$version_file",
-      "packaging": "$packaging"
+      "version_file": "$version_file"
     },
     "source": {
       "url": "$url",
+      "artifact": "$artifact",
       "username": "$username",
       "password": "$password",
       "repository_cert": "$repository_cert"
@@ -101,64 +101,72 @@ deploy_without_pom_with_credentials() {
 EOF
 }
 
-deploy_with_pom_without_credentials() {
+# deploy_with_pom_without_credentials() {
+#
+#   local url=$1
+#   local pom=$2
+#   local src=$3
+#
+#   local groupId=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='groupId']/text()" $pom)
+#   local artifactId=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='artifactId']/text()" $pom)
+#   local packaging=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='packaging']/text()" $pom)
+#   local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
+#
+#   local file=build-output/$artifactId-*.$packaging
+#
+#   local artifact=$groupId:$artifactId:$packaging
+#
+#   # Mock the jar
+#   mkdir $src/build-output
+#   touch $src/build-output/$artifactId-$version.$packaging
+#
+#   jq -n "{
+#     params: {
+#       file: $(echo $file | jq -R .),
+#       pom: $(echo $pom | jq -R .)
+#     },
+#     source: {
+#       url: $(echo $url | jq -R .),
+#       artifact: $(echo $artifact | jq -R .)
+#     }
+#   }" | $resource_dir/out "$src" | tee /dev/stderr
+# }
 
-  local url=$1
-  local pom=$2
-  local src=$3
-
-  local artifactId=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='artifactId']/text()" $pom)
-  local packaging=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='packaging']/text()" $pom)
-  local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
-
-  local file=build-output/$artifactId-*.$packaging
-
-  # Mock the jar
-  mkdir $src/build-output
-  touch $src/build-output/$artifactId-$version.$packaging
-
-  jq -n "{
-    params: {
-      file: $(echo $file | jq -R .),
-      pom: $(echo $pom | jq -R .)
-    },
-    source: {
-      url: $(echo $url | jq -R .)
-    }
-  }" | $resource_dir/out "$src" | tee /dev/stderr
-}
-
-deploy_with_pom_with_credentials() {
-
-  local url=$1
-  local pom=$2
-  local username=$3
-  local password=$4
-  local repository_cert=$(echo "$5" | awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}')
-  local src=$6
-
-  local artifactId=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='artifactId']/text()" $pom)
-  local packaging=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='packaging']/text()" $pom)
-  local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
-
-  local file=build-output/$artifactId-*.$packaging
-
-  # Mock the jar
-  mkdir $src/build-output
-  touch $src/build-output/$artifactId-$version.$packaging
-
-  cat <<EOF | $resource_dir/out "$src" | tee /dev/stderr
-  {
-    "params": {
-      "file": "$file",
-      "pom": "$pom"
-    },
-    "source": {
-      "url": "$url",
-      "username": "$username",
-      "password": "$password",
-      "repository_cert": "$repository_cert"
-    }
-  }
-EOF
-}
+# deploy_with_pom_with_credentials() {
+#
+#   local url=$1
+#   local pom=$2
+#   local username=$3
+#   local password=$4
+#   local repository_cert=$(echo "$5" | awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}')
+#   local src=$6
+#
+#   local groupId=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='groupId']/text()" $pom)
+#   local artifactId=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='artifactId']/text()" $pom)
+#   local packaging=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='packaging']/text()" $pom)
+#   local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
+#
+#   local artifact=$groupId:$artifactId:$packaging
+#
+#   local file=build-output/$artifactId-*.$packaging
+#
+#   # Mock the jar
+#   mkdir $src/build-output
+#   touch $src/build-output/$artifactId-$version.$packaging
+#
+#   cat <<EOF | $resource_dir/out "$src" | tee /dev/stderr
+#   {
+#     "params": {
+#       "file": "$file",
+#       "pom": "$pom"
+#     },
+#     "source": {
+#       "url": "$url",
+#       "artifact": "$artifact",
+#       "username": "$username",
+#       "password": "$password",
+#       "repository_cert": "$repository_cert"
+#     }
+#   }
+# EOF
+# }

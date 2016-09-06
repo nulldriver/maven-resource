@@ -22,22 +22,33 @@ payload=$(mktemp $TMPDIR/maven-resource-request.XXXXXX)
 cat > $payload <&0
 
 url=$(jq -r '.source.url // ""' < $payload)
+artifact=$(jq -r '.source.artifact // ""' < $payload)
 username=$(jq -r '.source.username // ""' < $payload)
 password=$(jq -r '.source.password // ""' < $payload)
 repository_cert=$(jq -r '.source.repository_cert // ""' < $payload)
 
 file=$(jq -r '.params.file // ""' < $payload)
-pom=$(jq -r '.params.pom // ""' < $payload)
-groupId=$(jq -r '.params.groupId // ""' < $payload)
-artifactId=$(jq -r '.params.artifactId // ""' < $payload)
 version_file=$(jq -r '.params.version_file // ""' < $payload)
-packaging=$(jq -r '.params.packaging // ""' < $payload)
-MAVEN_OPTS=$(jq -r '.params.maven_opts // ""' < $payload)
-MAVEN_CONFIG=$(jq -r '.params.maven_config // ""' < $payload)
+
+sourceMavenOpts=$(jq -r '.source.maven_opts // ""' < $payload)
+sourceMavenConfig=$(jq -r '.source.maven_config // ""' < $payload)
+paramsMavenOpts=$(jq -r '.params.maven_opts // ""' < $payload)
+paramsMavenConfig=$(jq -r '.params.maven_config // ""' < $payload)
+
+# Allow overriding the source config values
+MAVEN_OPTS=${paramsMavenOpts:-$sourceMavenOpts}
+MAVEN_CONFIG=${paramsMavenConfig:-$sourceMavenConfig}
+
+# groupId:artifactId:type[:classifier]
+groupId=$(echo $artifact | cut -d ":" -f 1)
+artifactId=$(echo $artifact | cut -d ":" -f 2)
+packaging=$(echo $artifact | cut -d ":" -f 3)
+classifier=$(echo $artifact | cut -d ":" -f 4)
 
 # Use ours if user didn't specify
 [ -z "$MAVEN_CONFIG" ] && MAVEN_CONFIG="-s $(dirname $0)/.m2/settings.xml"
 
+# TODO: Add more error checking
 if [ -z "$url" ]; then
   echo "invalid payload (missing url)"
   exit 1
@@ -47,19 +58,13 @@ if [ -z "$file" ]; then
   echo "invalid payload (missing file)"
   exit 1
 fi
-file=$(ls $file)
 
-version=
-if [ -f "$version_file" ]; then
-  version=$(cat $version_file)
-elif [ -f "$pom" ]; then
-  version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
-fi
+file=$(ls $file)
+version=$(cat $version_file)
 
 if [ -n "$repository_cert" ]; then
   mkdir $source/ssl
   echo "$repository_cert" > $source/ssl/repository.crt
-  #cat $source/ssl/repository.crt >/dev/stderr
   keytool -import -file $source/ssl/repository.crt -alias CAAlias -keystore $source/ssl/truststore.jks -storepass changeit -noprompt
   MAVEN_OPTS="$MAVEN_OPTS -Djavax.net.ssl.trustStore=$source/ssl/truststore.jks \
                           -Djavax.net.ssl.trustStorePassword=changeit"
@@ -68,18 +73,14 @@ fi
 args=
 args="$args -Dfile=$file"
 args="$args -Durl=$url"
+args="$args -DgroupId=$groupId"
+args="$args -DartifactId=$artifactId"
+args="$args -Dversion=$version"
+args="$args -Dpackaging=$packaging"
 
-if [ -z "$pom" ]; then
-  args="$args -DgroupId=$groupId"
-  args="$args -DartifactId=$artifactId"
-  args="$args -Dversion=$version"
-  args="$args -Dpackaging=$packaging"
-else
-  args="$args -DpomFile=$pom"
-fi
-
-[ -n "$username" ] && args="$args -Drepository.username=$username";
-[ -n "$password" ] && args="$args -Drepository.password=$password";
+[ -n "$classifier" ] && args="$args -Dclassifier=$classifier"
+[ -n "$username" ]   && args="$args -Drepository.username=$username";
+[ -n "$password" ]   && args="$args -Drepository.password=$password";
 
 mvn $MAVEN_CONFIG $MAVEN_OPTS deploy:deploy-file $args
 
