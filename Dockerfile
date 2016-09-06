@@ -1,7 +1,6 @@
 FROM openjdk:8-jdk-alpine
 
-# libxml2-utils required for xmllint
-RUN apk add --no-cache wget curl tar bash jq libxml2-utils
+RUN apk add --no-cache wget curl tar bash jq libxml2-utils xmlstarlet
 
 ADD assets/ /opt/resource/
 ADD test/ /opt/resource-tests/
