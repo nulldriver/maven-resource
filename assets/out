@@ -5,6 +5,8 @@ set -e
 exec 3>&1 # make stdout available as fd 3 for the result
 exec 1>&2 # redirect all output to stderr for logging
 
+source $(dirname $0)/common
+
 source=$1
 
 if [ -z "$source" ]; then
@@ -40,10 +42,10 @@ MAVEN_OPTS=${paramsMavenOpts:-$sourceMavenOpts}
 MAVEN_CONFIG=${paramsMavenConfig:-$sourceMavenConfig}
 
 # groupId:artifactId:type[:classifier]
-groupId=$(echo $artifact | cut -d ":" -f 1)
-artifactId=$(echo $artifact | cut -d ":" -f 2)
-packaging=$(echo $artifact | cut -d ":" -f 3)
-classifier=$(echo $artifact | cut -d ":" -f 4)
+groupId=$(get_group_id $artifact)
+artifactId=$(get_artifact_id $artifact)
+packaging=$(get_packaging $artifact)
+classifier=$(get_classifier $artifact)
 
 # Use ours if user didn't specify
 [ -z "$MAVEN_CONFIG" ] && MAVEN_CONFIG="-s $(dirname $0)/.m2/settings.xml"

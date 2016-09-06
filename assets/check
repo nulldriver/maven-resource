@@ -5,6 +5,8 @@ set -e
 exec 3>&1 # make stdout available as fd 3 for the result
 exec 1>&2 # redirect all output to stderr for logging
 
+source $(dirname $0)/common
+
 # for jq
 PATH=/usr/local/bin:$PATH
 
@@ -17,8 +19,8 @@ artifact=$(jq -r '.source.artifact // ""' < $payload)
 version=$(jq -r '.version.version // ""' < $payload)
 
 # groupId:artifactId:type[:classifier]
-groupId=$(echo $artifact | cut -d ":" -f 1)
-artifactId=$(echo $artifact | cut -d ":" -f 2)
+groupId=$(get_group_id $artifact)
+artifactId=$(get_artifact_id $artifact)
 
 metadataUrl="$url/${groupId//.//}/$artifactId/maven-metadata.xml"
 

@@ -56,45 +56,45 @@ it_can_deploy_snapshot_to_manager_without_pom() {
   "
 }
 
-it_can_deploy_release_to_manager_with_pom() {
+# it_can_deploy_release_to_manager_with_pom() {
+#
+#   local src=$(mktemp -d $TMPDIR/out-src.XXXXXX)
+#
+#   mkdir $src/project
+#   cp $(dirname $0)/resources/pom-release.xml $src/project/pom.xml
+#
+#   local url=$MAVEN_RELEASES_URL
+#   local pom=$src/project/pom.xml
+#   local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
+#   local username=$MAVEN_REPO_USERNAME
+#   local password=$MAVEN_REPO_PASSWORD
+#   local repository_cert=$MAVEN_REPOSITORY_CERT
+#
+#   deploy_with_pom_with_credentials $url $pom $username $password "$repository_cert" $src | jq -e "
+#     .version == {version: $(echo $version | jq -R .)}
+#   "
+# }
 
-  local src=$(mktemp -d $TMPDIR/out-src.XXXXXX)
-
-  mkdir $src/project
-  cp $(dirname $0)/resources/pom-release.xml $src/project/pom.xml
-
-  local url=$MAVEN_RELEASES_URL
-  local pom=$src/project/pom.xml
-  local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
-  local username=$MAVEN_REPO_USERNAME
-  local password=$MAVEN_REPO_PASSWORD
-  local repository_cert=$MAVEN_REPOSITORY_CERT
-
-  deploy_with_pom_with_credentials $url $pom $username $password "$repository_cert" $src | jq -e "
-    .version == {version: $(echo $version | jq -R .)}
-  "
-}
-
-it_can_deploy_snapshot_to_manager_with_pom() {
-
-  local src=$(mktemp -d $TMPDIR/out-src.XXXXXX)
-
-  mkdir $src/project
-  cp $(dirname $0)/resources/pom-snapshot.xml $src/project/pom.xml
-
-  local url=$MAVEN_SNAPSHOTS_URL
-  local pom=$src/project/pom.xml
-  local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
-  local username=$MAVEN_REPO_USERNAME
-  local password=$MAVEN_REPO_PASSWORD
-  local repository_cert=$MAVEN_REPOSITORY_CERT
-
-  deploy_with_pom_with_credentials $url $pom $username $password "$repository_cert" $src | jq -e "
-    .version == {version: $(echo $version | jq -R .)}
-  "
-}
+# it_can_deploy_snapshot_to_manager_with_pom() {
+#
+#   local src=$(mktemp -d $TMPDIR/out-src.XXXXXX)
+#
+#   mkdir $src/project
+#   cp $(dirname $0)/resources/pom-snapshot.xml $src/project/pom.xml
+#
+#   local url=$MAVEN_SNAPSHOTS_URL
+#   local pom=$src/project/pom.xml
+#   local version=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" $pom)
+#   local username=$MAVEN_REPO_USERNAME
+#   local password=$MAVEN_REPO_PASSWORD
+#   local repository_cert=$MAVEN_REPOSITORY_CERT
+#
+#   deploy_with_pom_with_credentials $url $pom $username $password "$repository_cert" $src | jq -e "
+#     .version == {version: $(echo $version | jq -R .)}
+#   "
+# }
 
 run it_can_deploy_release_to_manager_without_pom
 run it_can_deploy_snapshot_to_manager_without_pom
-run it_can_deploy_release_to_manager_with_pom
-run it_can_deploy_snapshot_to_manager_with_pom
+# run it_can_deploy_release_to_manager_with_pom
+# run it_can_deploy_snapshot_to_manager_with_pom

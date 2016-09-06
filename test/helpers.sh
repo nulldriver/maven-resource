@@ -13,6 +13,8 @@ else
   resource_dir=$(cd $(dirname $0)/../assets && pwd)
 fi
 
+source $resource_dir/common
+
 run() {
   export TMPDIR=$(mktemp -d ${TMPDIR_ROOT}/mvn-tests.XXXXXX)
 
@@ -29,6 +31,55 @@ create_version_file() {
   echo "$version" > $src/version/number
 
   echo version/number
+}
+
+artifact_to_filename() {
+  local artifact=$1
+  local version=$2
+
+  local artifactId=$(get_artifact_id $artifact)
+  local packaging=$(get_packaging $artifact)
+  local classifier=$(get_classifier $artifact)
+  [ -n "$classifier" ] && classifier="-${classifier}"
+
+  echo $artifactId-$version$classifier.$packaging
+}
+
+create_mock_artifact() {
+  local artifact=$1
+  local version=$2
+  local src=$3
+
+  local groupId=$(get_group_id $artifact)
+  local artifactId=$(get_artifact_id $artifact)
+
+  local dir="$src/.m2/repository/${groupId//.//}/$artifactId/$version"
+  local file=$(artifact_to_filename $artifact $version)
+
+  mkdir -p $dir
+  touch $dir/$file
+
+  echo $file
+}
+
+get_artifact() {
+    local url=$1
+    local artifact=$2
+    local version=$3
+    local src=$4
+
+    # Mock the jar
+    local file=$(create_mock_artifact $artifact $version $src)
+
+    jq -n "{
+      source: {
+        url: $(echo $url | jq -R .),
+        artifact: $(echo $artifact | jq -R .)
+      },
+      version: {
+        version: $(echo $version | jq -R .)
+      }
+    }" | $resource_dir/in "$src" | tee /dev/stderr
 }
 
 deploy_without_pom_without_credentials() {
