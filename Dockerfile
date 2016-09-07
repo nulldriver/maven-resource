@@ -1,6 +1,6 @@
 FROM openjdk:8-jdk-alpine
 
-RUN apk add --no-cache wget curl tar bash jq libxml2-utils
+RUN apk add --no-cache curl tar bash jq libxml2-utils
 
 ADD assets/ /opt/resource/
 ADD test/ /opt/resource-tests/
@@ -9,8 +9,8 @@ ARG MAVEN_VERSION=3.3.9
 
 # Download Maven and verify the md5 hash
 RUN cd /tmp \
-  && wget http://mirrors.ibiblio.org/apache/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz \
-  && wget https://www.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz.md5 \
+  && curl -O http://mirrors.ibiblio.org/apache/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz \
+  && curl -O https://www.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz.md5 \
   && echo "  apache-maven-$MAVEN_VERSION-bin.tar.gz" >> apache-maven-$MAVEN_VERSION-bin.tar.gz.md5 \
   && md5sum -c apache-maven-$MAVEN_VERSION-bin.tar.gz.md5
 
