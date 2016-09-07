@@ -1,6 +1,6 @@
 FROM openjdk:8-jdk-alpine
 
-RUN apk add --no-cache wget curl tar bash jq libxml2-utils xmlstarlet
+RUN apk add --no-cache wget curl tar bash jq libxml2-utils
 
 ADD assets/ /opt/resource/
 ADD test/ /opt/resource-tests/

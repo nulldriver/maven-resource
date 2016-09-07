@@ -25,17 +25,17 @@ it_can_check() {
 EOF
 }
 
-it_can_check() {
-
-  local src=$(mktemp -d $TMPDIR/check-src.XXXXXX)
-
-  local url=file://$src/.m2/repository
-  local artifact=org.seleniumhq.selenium.server:selenium-server:jar:standalone
-  local version=1.0-beta-2
-
-  check_artifact $url $artifact $version $src | jq -e "
-    .version == {version: $(echo $version | jq -R .)}
-  "
-}
+# it_can_check() {
+#
+#   local src=$(mktemp -d $TMPDIR/check-src.XXXXXX)
+#
+#   local url=file://$src/.m2/repository
+#   local artifact=org.seleniumhq.selenium.server:selenium-server:jar:standalone
+#   local version=1.0-beta-2
+#
+#   check_artifact $url $artifact $version $src | jq -e "
+#     .version == {version: $(echo $version | jq -R .)}
+#   "
+# }
 
 run it_can_check

@@ -27,7 +27,8 @@ metadataUrl="$url/${groupId//.//}/$artifactId/maven-metadata.xml"
 pattern=$([ -z "$version" ] && echo "\$p" || echo "/^$version\$/,\$p")
 
 curl $metadataUrl \
-  | xmlstarlet sel --template --value-of "/metadata/versioning/versions/version" \
+  | xmllint --xpath "/metadata/versioning/versions/version" - \
+  | awk -F'</?version>' '{for(i=2;i<=NF;i++) if ($i != "") print $i}' \
   | sed -n "${pattern}" \
   | sed 's/.*/{ "version": "&" }/' \
   | jq --slurp .
