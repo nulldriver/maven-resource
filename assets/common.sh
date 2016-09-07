@@ -1,7 +1,3 @@
-#!/bin/bash
-
-set -e
-
 get_group_id() {
   echo $1 | cut -d ":" -f 1
 }

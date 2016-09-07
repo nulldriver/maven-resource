@@ -25,4 +25,4 @@ RUN cd /tmp \
   && rm apache-maven-$MAVEN_VERSION-bin.tar.gz apache-maven-$MAVEN_VERSION-bin.tar.gz.md5
 
 # Run tests (also pre-seeds .m2/repository)
-RUN /opt/resource-tests/test-out.sh
+RUN /opt/resource-tests/all.sh

@@ -13,7 +13,7 @@ else
   resource_dir=$(cd $(dirname $0)/../assets && pwd)
 fi
 
-source $resource_dir/common
+source $resource_dir/common.sh
 
 run() {
   export TMPDIR=$(mktemp -d ${TMPDIR_ROOT}/mvn-tests.XXXXXX)
