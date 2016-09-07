@@ -2,7 +2,7 @@
 
 set -e
 
-source $(dirname $0)/helpers.sh
+source $(dirname $0)/../test/helpers.sh
 
 # Export these vars, or let the script prompt you for them
 #export MAVEN_RELEASES_URL=http://myrepo.com/repository/releases/
