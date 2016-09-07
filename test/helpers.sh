@@ -23,17 +23,7 @@ run() {
   echo ""
 }
 
-create_version_file() {
-  local version=$1
-  local src=$2
-
-  mkdir $src/version
-  echo "$version" > $src/version/number
-
-  echo version/number
-}
-
-artifact_to_filename() {
+to_filename() {
   local artifact=$1
   local version=$2
 
@@ -45,6 +35,60 @@ artifact_to_filename() {
   echo $artifactId-$version$classifier.$packaging
 }
 
+deploy_artifact() {
+  local artifact=$1
+  local version=$2
+  local src=$3
+
+  local groupId=$(get_group_id $artifact)
+  local artifactId=$(get_artifact_id $artifact)
+  local packaging=$(get_packaging $artifact)
+  local classifier=$(get_classifier $artifact)
+
+  local file=$src/$(to_filename $artifact $version)
+  touch $file
+
+  local args="
+    -Dfile=$file
+    -Durl=file://$src
+    -DgroupId=$(get_group_id $artifact)
+    -DartifactId=$(get_artifact_id $artifact)
+    -Dversion=$version
+  "
+  [ -n "$classifier" ] && args="$args -Dclassifier=$classifier"
+
+  mvn deploy:deploy-file $args >/dev/stderr
+
+  echo $version
+}
+
+check_artifact() {
+  local url=$1
+  local artifact=$2
+  local version=$3
+  local src=$4
+
+  jq -n "{
+    source: {
+      url: $(echo $url | jq -R .),
+      artifact: $(echo $artifact | jq -R .)
+    },
+    version: {
+      version: $(echo $version | jq -R .)
+    }
+  }" | $resource_dir/check "$src" | tee /dev/stderr
+}
+
+create_version_file() {
+  local version=$1
+  local src=$2
+
+  mkdir $src/version
+  echo "$version" > $src/version/number
+
+  echo version/number
+}
+
 create_mock_artifact() {
   local artifact=$1
   local version=$2
@@ -54,7 +98,7 @@ create_mock_artifact() {
   local artifactId=$(get_artifact_id $artifact)
 
   local dir="$src/.m2/repository/${groupId//.//}/$artifactId/$version"
-  local file=$(artifact_to_filename $artifact $version)
+  local file=$(to_filename $artifact $version)
 
   mkdir -p $dir
   touch $dir/$file

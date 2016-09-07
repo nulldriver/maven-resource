@@ -19,7 +19,7 @@ it_can_get_artifact() {
   "
 
   # TODO: Validate $src/$file exists
-  # local file=$(artifact_to_filename $artifact $version)
+  # local file=$(to_filename $artifact $version)
   # [ ! -f "$file" ]
 }
 
