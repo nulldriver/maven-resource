@@ -12,7 +12,7 @@ it_can_get_artifact() {
   mkdir -p $repository
 
   local url=file://$repository
-  local artifact=org.seleniumhq.selenium.server:selenium-server:jar:standalone
+  local artifact=ci.concourse.maven:maven-resource:jar:standalone
 
   local ver=$(deploy_artifact $url $artifact "1.0.0-rc.1" $src)
 

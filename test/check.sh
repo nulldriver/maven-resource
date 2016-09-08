@@ -12,7 +12,7 @@ it_can_check_from_one() {
   mkdir -p $repository
 
   local url=file://$repository
-  local artifact=org.seleniumhq.selenium.server:selenium-server:jar:standalone
+  local artifact=ci.concourse.maven:maven-resource:jar:standalone
 
   local ver=$(deploy_artifact $url $artifact "1.0.0-rc.1" $src)
 
@@ -29,7 +29,7 @@ it_can_check_from_three() {
   mkdir -p $repository
 
   local url=file://$repository
-  local artifact=org.seleniumhq.selenium.server:selenium-server:jar:standalone
+  local artifact=ci.concourse.maven:maven-resource:jar:standalone
 
   local ver1=$(deploy_artifact $url $artifact "1.0.0-rc.1" $src)
   local ver2=$(deploy_artifact $url $artifact "1.0.0-rc.2" $src)
