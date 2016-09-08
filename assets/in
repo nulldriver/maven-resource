@@ -6,7 +6,9 @@ set -e
 exec 3>&1 # make stdout available as fd 3 for the result
 exec 1>&2 # redirect all output to stderr for logging
 
-source $(dirname $0)/common.sh
+resource_dir=$(dirname $0)
+
+source $resource_dir/common.sh
 
 destination=$1
 
@@ -47,11 +49,12 @@ paramsMavenOpts=$(jq -r '.params.maven_opts // ""' < $payload)
 paramsMavenConfig=$(jq -r '.params.maven_config // ""' < $payload)
 
 # Allow overriding the source config values
-MAVEN_OPTS=${paramsMavenOpts:-$sourceMavenOpts}
-MAVEN_CONFIG=${paramsMavenConfig:-$sourceMavenConfig}
+export MAVEN_OPTS=${paramsMavenOpts:-$sourceMavenOpts}
+export MAVEN_CONFIG=${paramsMavenConfig:-$sourceMavenConfig}
+export MAVEN_BASEDIR=$resource_dir
 
 # Use ours if user didn't specify
-[ -z "$MAVEN_CONFIG" ] && MAVEN_CONFIG="-s $(dirname $0)/.m2/settings.xml"
+[ -z "$MAVEN_CONFIG" ] && MAVEN_CONFIG="-s $(dirname $0)/.mvn/settings.xml"
 
 # groupId:artifactId:type[:classifier]
 groupId=$(get_group_id $artifact)
@@ -78,7 +81,7 @@ args="$args -Drepository.url=$url"
 [ -n "$username" ]   && args="$args -Drepository.username=$username";
 [ -n "$password" ]   && args="$args -Drepository.password=$password";
 
-mvn $MAVEN_CONFIG $MAVEN_OPTS dependency:copy $args
+$resource_dir/mvnw dependency:copy $args
 
 jq -n "{
   version: {version: $(echo $version | jq -R .)}

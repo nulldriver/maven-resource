@@ -58,7 +58,8 @@ deploy_artifact() {
   "
   [ -n "$classifier" ] && args="$args -Dclassifier=$classifier"
 
-  mvn deploy:deploy-file $args >/dev/stderr
+  export MAVEN_BASEDIR=$resource_dir
+  $resource_dir/mvnw deploy:deploy-file $args >/dev/stderr
 
   # cleanup dummy file
   rm $file
