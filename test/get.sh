@@ -6,21 +6,17 @@ source $(dirname $0)/helpers.sh
 
 it_can_get_artifact() {
 
-  local src=$(mktemp -d $TMPDIR/in-src.XXXXXX)
+  local src=$(mktemp -d $TMPDIR/check-src.XXXXXX)
 
-  mkdir -p $src/.m2/repository
-
-  local url=file://$src/.m2/repository
+  local url=file://$src
   local artifact=org.seleniumhq.selenium.server:selenium-server:jar:standalone
-  local version=1.0-beta-2
+  local ver=1.0.0-rc.1
 
-  get_artifact $url $artifact $version $src | jq -e "
-    .version == {version: $(echo $version | jq -R .)}
+  local location=$(deploy_artifact $artifact $ver $src)
+
+  get_artifact $url $artifact $ver $src | jq -e "
+    .version == {version: $(echo $ver | jq -R .)}
   "
-
-  # TODO: Validate $src/$file exists
-  # local file=$(to_filename $artifact $version)
-  # [ ! -f "$file" ]
 }
 
 run it_can_get_artifact

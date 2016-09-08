@@ -25,6 +25,33 @@ cat > $payload <&0
 url=$(jq -r '.source.url // ""' < $payload)
 artifact=$(jq -r '.source.artifact // ""' < $payload)
 version=$(jq -r '.version.version // ""' < $payload)
+username=$(jq -r '.source.username // ""' < $payload)
+password=$(jq -r '.source.password // ""' < $payload)
+repository_cert=$(jq -r '.source.repository_cert // ""' < $payload)
+
+# TODO: Add more error checking
+# TODO: Add more error checking
+if [ -z "$url" ]; then
+  echo "invalid payload (missing url)"
+  exit 1
+fi
+
+if [ -z "$artifact" ]; then
+  echo "invalid payload (missing artifact)"
+  exit 1
+fi
+
+sourceMavenOpts=$(jq -r '.source.maven_opts // ""' < $payload)
+sourceMavenConfig=$(jq -r '.source.maven_config // ""' < $payload)
+paramsMavenOpts=$(jq -r '.params.maven_opts // ""' < $payload)
+paramsMavenConfig=$(jq -r '.params.maven_config // ""' < $payload)
+
+# Allow overriding the source config values
+MAVEN_OPTS=${paramsMavenOpts:-$sourceMavenOpts}
+MAVEN_CONFIG=${paramsMavenConfig:-$sourceMavenConfig}
+
+# Use ours if user didn't specify
+[ -z "$MAVEN_CONFIG" ] && MAVEN_CONFIG="-s $(dirname $0)/.m2/settings.xml"
 
 # groupId:artifactId:type[:classifier]
 groupId=$(get_group_id $artifact)
@@ -35,10 +62,23 @@ classifier=$(get_classifier $artifact)
 artifactItem=$groupId:$artifactId:$version:$packaging
 [ -n "$classifier" ] && artifactItem="$artifactItem:$classifier"
 
-mvn dependency:copy \
-    -Dartifact=$artifactItem \
-    -DremoteRepositories=$url \
-    -DoutputDirectory=$destination
+if [ -n "$repository_cert" ]; then
+  mkdir $source/ssl
+  echo "$repository_cert" > $source/ssl/repository.crt
+  keytool -import -file $source/ssl/repository.crt -alias CAAlias -keystore $source/ssl/truststore.jks -storepass changeit -noprompt
+  MAVEN_OPTS="$MAVEN_OPTS -Djavax.net.ssl.trustStore=$source/ssl/truststore.jks \
+                          -Djavax.net.ssl.trustStorePassword=changeit"
+fi
+
+args=
+args="$args -Dartifact=$artifactItem"
+args="$args -DoutputDirectory=$destination"
+args="$args -Drepository.url=$url"
+
+[ -n "$username" ]   && args="$args -Drepository.username=$username";
+[ -n "$password" ]   && args="$args -Drepository.password=$password";
+
+mvn $MAVEN_CONFIG $MAVEN_OPTS dependency:copy $args
 
 jq -n "{
   version: {version: $(echo $version | jq -R .)}

@@ -46,7 +46,7 @@ deploy_artifact() {
   local classifier=$(get_classifier $artifact)
 
   local file=$src/$(to_filename $artifact $version)
-  touch $file
+  echo "dummy jar (maven won't deploy a zero length file)" > $file
 
   local args="
     -Dfile=$file
@@ -89,31 +89,11 @@ create_version_file() {
   echo version/number
 }
 
-create_mock_artifact() {
-  local artifact=$1
-  local version=$2
-  local src=$3
-
-  local groupId=$(get_group_id $artifact)
-  local artifactId=$(get_artifact_id $artifact)
-
-  local dir="$src/.m2/repository/${groupId//.//}/$artifactId/$version"
-  local file=$(to_filename $artifact $version)
-
-  mkdir -p $dir
-  touch $dir/$file
-
-  echo $file
-}
-
 get_artifact() {
     local url=$1
     local artifact=$2
     local version=$3
     local src=$4
-
-    # Mock the jar
-    local file=$(create_mock_artifact $artifact $version $src)
 
     jq -n "{
       source: {
