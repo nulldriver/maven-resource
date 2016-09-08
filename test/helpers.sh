@@ -36,9 +36,10 @@ to_filename() {
 }
 
 deploy_artifact() {
-  local artifact=$1
-  local version=$2
-  local src=$3
+  local url=$1
+  local artifact=$2
+  local version=$3
+  local src=$4
 
   local groupId=$(get_group_id $artifact)
   local artifactId=$(get_artifact_id $artifact)
@@ -50,7 +51,7 @@ deploy_artifact() {
 
   local args="
     -Dfile=$file
-    -Durl=file://$src
+    -Durl=$url
     -DgroupId=$(get_group_id $artifact)
     -DartifactId=$(get_artifact_id $artifact)
     -Dversion=$version
@@ -58,6 +59,9 @@ deploy_artifact() {
   [ -n "$classifier" ] && args="$args -Dclassifier=$classifier"
 
   mvn deploy:deploy-file $args >/dev/stderr
+
+  # cleanup dummy file
+  rm $file
 
   echo $version
 }
