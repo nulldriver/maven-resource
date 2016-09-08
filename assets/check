@@ -18,7 +18,7 @@ cat > $payload <&0
 url=$(jq -r '.source.url // ""' < $payload)
 artifact=$(jq -r '.source.artifact // ""' < $payload)
 version=$(jq -r '.version.version // ""' < $payload)
-echo "version=$version"
+
 # groupId:artifactId:type[:classifier]
 groupId=$(get_group_id $artifact)
 artifactId=$(get_artifact_id $artifact)
