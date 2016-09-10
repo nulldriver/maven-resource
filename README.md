@@ -3,6 +3,7 @@
 Deploys and retrieve artifacts from a Maven Repository Manager.
 
 
+
 ## Source Configuration
 
 * `url`: *Required.* The location of the repository.
@@ -30,6 +31,13 @@ Deploys and retrieve artifacts from a Maven Repository Manager.
 Resource configuration for an authenticated repository:
 
 ``` yaml
+resource_types:
+- name: maven-resource
+  type: docker-image
+  source:
+    repository: patrickcrocker/maven-resource
+    tag: latest
+
 resources:
 - name: milestone
   type: maven-resource
@@ -46,7 +54,32 @@ resources:
       -----END CERTIFICATE-----
 ```
 
-Deploying an artifact built by Maven
+## Behavior
+
+### `check`: Check for new versions of the artifact.
+
+Checks for new versions of the artifact by retrieving the `maven-metadata.xml` from
+the repository.
+
+
+### `in`: Fetch an artifact from a repository.
+
+Download the artifact from the repository.
+
+
+### `out`: Deploy artifact to a repository.
+
+Deploy the artifact to the Maven Repository Manager.
+
+#### Parameters
+
+* `file`: *Required.* The path to the artifact to deploy.
+
+* `version_file`: *Required.* The path to the version file
+
+### Examples
+
+Deploying an artifact built by Maven:
 
 ``` yaml
 jobs:
@@ -66,24 +99,25 @@ jobs:
     params: { file: version/number }
 ```
 
-## Behavior
+Retrieve a _milestone_ artifact, push to Cloud Foundry and run integration tests:
 
-### `check`: ...
-
-Check not implemented yet...
-
-
-### `in`: ...
-
-In not implemented yet...
-
-
-### `out`: Deploy to a repository.
-
-Deploy the artifact to the Maven Repository Manager.
-
-#### Parameters
-
-* `file`: *Required.* The path to the artifact to deploy.
-
-* `version_file`: *Required.* The path to the version file
+``` yaml
+- name: test
+  plan:
+  - get: milestone
+    trigger: true
+    passed: [ build ]
+  - get: source-code
+    passed: [ build ]
+  - get: version
+    passed: [ build ]
+  - task: prepare-cf
+    file: source-code/ci/prepare-cf.yml
+  - put: cf
+    params:
+      manifest: prepare-cf-output/manifest.yml
+  - task: integration
+    file: source-code/ci/integration-test.yml
+    params:
+      API_ENDPOINT: https://myapp.cfapps.io/
+```
