@@ -18,16 +18,23 @@ cat > $payload <&0
 url=$(jq -r '.source.url // ""' < $payload)
 artifact=$(jq -r '.source.artifact // ""' < $payload)
 version=$(jq -r '.version.version // ""' < $payload)
+username=$(jq -r '.source.username // ""' < $payload)
+password=$(jq -r '.source.password // ""' < $payload)
 
 # groupId:artifactId:type[:classifier]
 groupId=$(get_group_id $artifact)
 artifactId=$(get_artifact_id $artifact)
 
+auth=""
+if [ -n "$username" ]; then
+  auth="--user $username:$password"
+fi
+
 metadataUrl="$url/${groupId//.//}/$artifactId/maven-metadata.xml"
 
 pattern=$([ -z "$version" ] && echo "\$p" || echo "/^$version\$/,\$p")
 
-curl $metadataUrl \
+curl $auth $metadataUrl \
   | xmllint --xpath "/metadata/versioning/versions/version" - \
   | awk -F'</?version>' '{for(i=2;i<=NF;i++) if ($i != "") print $i}' \
   | sed -n "${pattern}" \
