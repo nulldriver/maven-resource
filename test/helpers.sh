@@ -130,9 +130,14 @@ deploy_without_pom_without_credentials() {
   mkdir $src/build-output
   touch $src/build-output/$artifactId-$version.$packaging
 
+  # Mock the pom.xml
+  local pom=build-output/pom.xml
+  cp resources/pom-release.xml $src/$pom
+
   jq -n "{
     params: {
       file: $(echo $file | jq -R .),
+      pom_file: $(echo $pom | jq -R .),
       version_file: $(echo $version_file | jq -R .)
     },
     source: {

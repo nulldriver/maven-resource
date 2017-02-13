@@ -33,6 +33,7 @@ password=$(jq -r '.source.password // ""' < $payload)
 repository_cert=$(jq -r '.source.repository_cert // ""' < $payload)
 
 file=$(jq -r '.params.file // ""' < $payload)
+pom_file=$(jq -r '.params.pom_file // ""' < $payload)
 version_file=$(jq -r '.params.version_file // ""' < $payload)
 
 sourceMavenOpts=$(jq -r '.source.maven_opts // ""' < $payload)
@@ -65,7 +66,10 @@ if [ -z "$file" ]; then
   exit 1
 fi
 
+# transform this: build-output/your-artifact-*.jar
+#      into this: build-output/your-artifact-1.0.0-rc.0.jar
 file=$(ls $file)
+pom_file=$(ls $pom_file)
 version=$(cat $version_file)
 
 if [ -n "$repository_cert" ]; then
@@ -84,6 +88,7 @@ args="$args -DartifactId=$artifactId"
 args="$args -Dversion=$version"
 args="$args -Dpackaging=$packaging"
 
+[ -f "$pom_file" ]   && args="$args -DpomFile=$pom_file"
 [ -n "$classifier" ] && args="$args -Dclassifier=$classifier"
 [ -n "$username" ]   && args="$args -Drepository.username=$username";
 [ -n "$password" ]   && args="$args -Drepository.password=$password";
