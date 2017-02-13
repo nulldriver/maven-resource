@@ -7,6 +7,8 @@ set -o pipefail
 export TMPDIR_ROOT=$(mktemp -d /tmp/mvn-tests.XXXXXX)
 trap "rm -rf $TMPDIR_ROOT" EXIT
 
+test_dir=$(dirname $0)
+
 if [ -d /opt/resource ]; then
   resource_dir=/opt/resource
 else
@@ -132,7 +134,7 @@ deploy_without_pom_without_credentials() {
 
   # Mock the pom.xml
   local pom=build-output/pom.xml
-  cp resources/pom-release.xml $src/$pom
+  cp $test_dir/resources/pom-release.xml $src/$pom
 
   jq -n "{
     params: {
