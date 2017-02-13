@@ -3,19 +3,23 @@ jobs:
 - name: build
   public: true
   plan:
-  - get: maven-resource
-    trigger: true
-  - get: version
-    params: { pre: rc }
-  - put: maven-resource-image-rc
-    params:
-      build: maven-resource
-      tag: version/version
-      tag_as_latest: true
-  - put: tracker
-    params:
-      repos:
-        - maven-resource
+  - aggregate:
+    - get: maven-resource
+      trigger: true
+    - get: version
+      params: { pre: rc }
+  - aggregate:
+    - put: version
+      params: { file: version/number }
+    - put: maven-resource-image-rc
+      params:
+        build: maven-resource
+        tag: version/version
+        tag_as_latest: true
+    - put: tracker
+      params:
+        repos:
+          - maven-resource
 
 - name: shipit
   serial_groups: [version]
