@@ -94,6 +94,7 @@ jobs:
   - put: milestone
     params:
       file: build-output/myartifact-*.jar
+      pom_file: source-code/pom.xml
       version_file: version/number
   - put: version
     params: { file: version/number }
