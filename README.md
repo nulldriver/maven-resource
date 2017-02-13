@@ -75,6 +75,8 @@ Deploy the artifact to the Maven Repository Manager.
 
 * `file`: *Required.* The path to the artifact to deploy.
 
+* `pom_file`: *Recommended.* The path to the pom.xml to deploy with the artifact.
+
 * `version_file`: *Required.* The path to the version file
 
 ## Examples
