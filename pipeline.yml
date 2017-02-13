@@ -8,18 +8,17 @@ jobs:
       trigger: true
     - get: version
       params: { pre: rc }
-  - aggregate:
-    - put: version
-      params: { file: version/number }
-    - put: maven-resource-image-rc
-      params:
-        build: maven-resource
-        tag: version/version
-        tag_as_latest: true
-    - put: tracker
-      params:
-        repos:
-          - maven-resource
+  - put: version
+    params: { file: version/number }
+  - put: maven-resource-image-rc
+    params:
+      build: maven-resource
+      tag: version/version
+      tag_as_latest: true
+  - put: tracker
+    params:
+      repos:
+        - maven-resource
 
 - name: shipit
   serial_groups: [version]
@@ -31,14 +30,13 @@ jobs:
     - get: version
       passed: [build]
       params: {bump: final}
-  - aggregate:
-    - put: version
-      params: { file: version/number }
-    - put: maven-resource-image-final
-      params:
-        load: maven-resource-image-rc
-        tag: version/version
-        tag_as_latest: true
+  - put: version
+    params: { file: version/number }
+  - put: maven-resource-image-final
+    params:
+      load: maven-resource-image-rc
+      tag: version/version
+      tag_as_latest: true
 
 resources:
 - name: maven-resource
