@@ -1,15 +1,40 @@
 ---
 jobs:
 - name: build
+  public: true
   plan:
   - get: maven-resource
     trigger: true
-  - put: maven-resource-image
-    params: {build: maven-resource}
+  - get: version
+    params: { pre: rc }
+  - put: maven-resource-image-rc
+    params:
+      build: maven-resource
+      tag: version/version
+      tag_as_latest: true
   - put: tracker
     params:
       repos:
         - maven-resource
+
+- name: shipit
+  serial_groups: [version]
+  plan:
+  - aggregate:
+    - get: maven-resource-image-rc
+      passed: [build]
+      params: {save: true}
+    - get: version
+      passed: [build]
+      params: {bump: final}
+  - aggregate:
+    - put: version
+      params: { file: version/number }
+    - put: maven-resource-image-final
+      params:
+        load: maven-resource-image-rc
+        tag: version/version
+        tag_as_latest: true
 
 resources:
 - name: maven-resource
@@ -17,12 +42,34 @@ resources:
   source:
     uri: {{git-uri}}
     branch: {{git-branch}}
-    private_key: {{github-private-key}}
+    private_key: {{git-private-key}}
+    ignore_paths:
+    - LICENSE
+    - NOTICE.md
+    - pipeline.yml
+    - README.md
 
-- name: maven-resource-image
+- name: version
+  type: semver
+  source:
+    driver: git
+    initial_version: 1.0.0-rc.0
+    uri: {{git-uri-semver}}
+    branch: version
+    file: version
+    private_key: {{git-private-key}}
+
+- name: maven-resource-image-rc
   type: docker-image
   source:
-    repository: {{docker-repository}}
+    repository: {{docker-repository-rc}}
+    username: {{docker-username}}
+    password: {{docker-password}}
+
+- name: maven-resource-image-final
+  type: docker-image
+  source:
+    repository: {{docker-repository-final}}
     username: {{docker-username}}
     password: {{docker-password}}
 
