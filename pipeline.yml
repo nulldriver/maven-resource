@@ -2,14 +2,15 @@
 jobs:
 - name: build
   public: true
+  serial_groups: [version]
   plan:
   - aggregate:
     - get: maven-resource
       trigger: true
     - get: version
-      params: { pre: rc }
+      params: {pre: rc}
   - put: version
-    params: { file: version/number }
+    params: {file: version/version}
   - put: maven-resource-image-rc
     params:
       build: maven-resource
@@ -21,6 +22,7 @@ jobs:
         - maven-resource
 
 - name: shipit
+  public: true
   serial_groups: [version]
   plan:
   - aggregate:
@@ -31,12 +33,41 @@ jobs:
       passed: [build]
       params: {bump: final}
   - put: version
-    params: { file: version/number }
+    params: {file: version/version}
   - put: maven-resource-image-final
     params:
       load: maven-resource-image-rc
       tag: version/version
       tag_as_latest: true
+
+- name: major
+  public: true
+  serial_groups: [version]
+  plan:
+  - get: version
+    params: {bump: major, pre: rc}
+  - put: version
+    params: {file: version/version}
+
+- name: minor
+  public: true
+  serial_groups: [version]
+  plan:
+  - get: version
+    params: {bump: minor, pre: rc}
+  - put: version
+    params: {file: version/version}
+
+- name: patch
+  public: true
+  serial_groups: [version]
+  plan:
+  - get: version
+    passed: [shipit]
+    params: {bump: patch, pre: rc}
+    trigger: true
+  - put: version
+    params: {file: version/version}
 
 resources:
 - name: maven-resource
