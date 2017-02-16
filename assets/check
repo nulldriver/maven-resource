@@ -52,11 +52,17 @@ fi
 
 metadataUrl="$url/${groupId//.//}/$artifactId/maven-metadata.xml"
 
-pattern=$([ -z "$version" ] && echo "\$p" || echo "/^$version\$/,\$p")
+output=$(curl -s $cert $auth $metadataUrl)
 
-curl -s $cert $auth $metadataUrl \
-  | xmllint --xpath "/metadata/versioning/versions/version" - \
-  | awk -F'</?version>' '{for(i=2;i<=NF;i++) if ($i != "") print $i}' \
-  | sed -n "${pattern}" \
-  | sed 's/.*/{ "version": "&" }/' \
-  | jq --slurp .
+declare -a versions=( )
+if [ "$version" = "latest" ] || [ -z "$version" ]; then
+  versions[1]=$(echo $output | xmllint --xpath "/metadata/versioning/versions/version[last()]/text()" - 2>/dev/null)
+else
+  itemsCount=$(echo $output | xmllint --xpath 'count(/metadata/versioning/versions/version)' -)
+
+  for (( i=1; i <= $itemsCount; i++ )); do
+    versions[$i]=$(echo $output | xmllint --xpath "/metadata/versioning/versions/version[$i]/text()" -)
+  done
+fi
+
+printf "%s\n" "${versions[@]}" | sed 's/.*/{ "version": "&" }/' | jq --slurp .
