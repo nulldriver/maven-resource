@@ -16,6 +16,8 @@ Deploys and retrieve artifacts from a Maven Repository Manager.
 
 * `password`: *Optional.* Password for accessing an authenticated repository.
 
+* `skip_cert_check`: *Optional.* If set to `true`, will ignore all certificate errors when accessing an SSL repository. NOTE: this will supersede the `repository_cert` configuration if also specified.
+
 * `repository_cert`: *Optional.* CA/server certificate to use when accessing an SSL repository.
     Example:
     ```
