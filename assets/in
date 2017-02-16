@@ -29,6 +29,7 @@ artifact=$(jq -r '.source.artifact // ""' < $payload)
 version=$(jq -r '.version.version // ""' < $payload)
 username=$(jq -r '.source.username // ""' < $payload)
 password=$(jq -r '.source.password // ""' < $payload)
+skip_cert_check=$(jq -r '.source.skip_cert_check // ""' < $payload)
 repository_cert=$(jq -r '.source.repository_cert // ""' < $payload)
 
 # TODO: Add more error checking
@@ -65,7 +66,9 @@ classifier=$(get_classifier $artifact)
 artifactItem=$groupId:$artifactId:$version:$packaging
 [ -n "$classifier" ] && artifactItem="$artifactItem:$classifier"
 
-if [ -n "$repository_cert" ]; then
+if [ "$skip_cert_check" = "true" ]; then
+  MAVEN_OPTS="-Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true -Dmaven.wagon.http.ssl.ignore.validity.dates=true"
+elif [ -n "$repository_cert" ]; then
   mkdir $source/ssl
   echo "$repository_cert" > $source/ssl/repository.crt
   keytool -import -file $source/ssl/repository.crt -alias CAAlias -keystore $source/ssl/truststore.jks -storepass changeit -noprompt

@@ -30,6 +30,7 @@ url=$(jq -r '.source.url // ""' < $payload)
 artifact=$(jq -r '.source.artifact // ""' < $payload)
 username=$(jq -r '.source.username // ""' < $payload)
 password=$(jq -r '.source.password // ""' < $payload)
+skip_cert_check=$(jq -r '.source.skip_cert_check // ""' < $payload)
 repository_cert=$(jq -r '.source.repository_cert // ""' < $payload)
 
 file=$(jq -r '.params.file // ""' < $payload)
@@ -72,7 +73,9 @@ file=$(ls $file)
 pom_file=$(ls $pom_file)
 version=$(cat $version_file)
 
-if [ -n "$repository_cert" ]; then
+if [ "$skip_cert_check" = "true" ]; then
+  MAVEN_OPTS="-Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true -Dmaven.wagon.http.ssl.ignore.validity.dates=true"
+elif [ -n "$repository_cert" ]; then
   mkdir $source/ssl
   echo "$repository_cert" > $source/ssl/repository.crt
   keytool -import -file $source/ssl/repository.crt -alias CAAlias -keystore $source/ssl/truststore.jks -storepass changeit -noprompt

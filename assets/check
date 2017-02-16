@@ -29,6 +29,7 @@ artifact=$(jq -r '.source.artifact // ""' < $payload)
 version=$(jq -r '.version.version // ""' < $payload)
 username=$(jq -r '.source.username // ""' < $payload)
 password=$(jq -r '.source.password // ""' < $payload)
+skip_cert_check=$(jq -r '.source.skip_cert_check // ""' < $payload)
 repository_cert=$(jq -r '.source.repository_cert // ""' < $payload)
 
 # groupId:artifactId:type[:classifier]
@@ -41,7 +42,9 @@ if [ -n "$username" ]; then
 fi
 
 cert=""
-if [ -n "$repository_cert" ]; then
+if [ "$skip_cert_check" = "true" ]; then
+  cert="-k"
+elif [ -n "$repository_cert" ]; then
   mkdir $source/ssl
   echo "$repository_cert" > $source/ssl/repository.crt
   cert="--cacert $source/ssl/repository.crt"
