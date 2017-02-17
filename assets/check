@@ -8,14 +8,6 @@ exec 1>&2 # redirect all output to stderr for logging
 
 source $(dirname $0)/common.sh
 
-source=$1
-
-if [ -z "$source" ]; then
-  source=$(mktemp -d '/tmp/source.XXXXXX')
-fi
-
-cd $source
-
 # for jq
 PATH=/usr/local/bin:$PATH
 
