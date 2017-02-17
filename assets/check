@@ -11,8 +11,8 @@ source $(dirname $0)/common.sh
 # for jq
 PATH=/usr/local/bin:$PATH
 
-payload=$(mktemp $TMPDIR/git-resource-request.XXXXXX)
-working=$(mktemp $TMPDIR/git-resource-working.XXXXXX)
+payload=$(mktemp $TMPDIR/maven-resource-request.XXXXXX)
+working=$TMPDIR/maven-resource-working
 
 cat > $payload <&0
 
@@ -37,7 +37,7 @@ cert=""
 if [ "$skip_cert_check" = "true" ]; then
   cert="-k"
 elif [ -n "$repository_cert" ]; then
-  mkdir $working/ssl
+  mkdir -p $working/ssl
   echo "$repository_cert" > $working/ssl/repository.crt
   cert="--cacert $working/ssl/repository.crt"
 fi

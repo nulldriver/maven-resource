@@ -20,7 +20,7 @@ fi
 # for jq
 PATH=/usr/local/bin:$PATH
 
-payload=$(mktemp $TMPDIR/git-resource-request.XXXXXX)
+payload=$(mktemp $TMPDIR/maven-resource-request.XXXXXX)
 
 cat > $payload <&0
 
