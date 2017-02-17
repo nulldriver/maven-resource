@@ -1,12 +1,10 @@
 #!/bin/bash
 # vim: set ft=sh
 
-set -e -x
+set -e
 
 exec 3>&1 # make stdout available as fd 3 for the result
 exec 1>&2 # redirect all output to stderr for logging
-
-echo "current dir=$(dirname $0)"
 
 source $(dirname $0)/common.sh
 
@@ -59,8 +57,4 @@ else
   done
 fi
 
-json=$(printf "%s\n" "${versions[@]}" | sed 's/.*/{ "version": "&" }/' | jq --slurp .)
-
-echo "json=$json"
-
-echo $json >&3
+printf "%s\n" "${versions[@]}" | sed 's/.*/{ "version": "&" }/' | jq --slurp . >&3
