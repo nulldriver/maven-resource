@@ -15,7 +15,7 @@ jobs:
     params:
       build: maven-resource
       tag: version/version
-      tag_as_latest: true
+      tag_as_latest: false
   - put: tracker
     params:
       repos:
