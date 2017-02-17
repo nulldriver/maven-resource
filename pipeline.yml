@@ -16,10 +16,10 @@ jobs:
       build: maven-resource
       tag: version/version
       tag_as_latest: false
-  - put: tracker
-    params:
-      repos:
-        - maven-resource
+  # - put: tracker
+  #   params:
+  #     repos:
+  #       - maven-resource
 
 - name: shipit
   public: true
@@ -106,9 +106,9 @@ resources:
     username: {{docker-username}}
     password: {{docker-password}}
 
-- name: tracker
-  type: tracker
-  source:
-    token: {{tracker-api-token}}
-    project_id: {{tracker-project-id}}
-    tracker_url: {{tracker-url}}
+# - name: tracker
+#   type: tracker
+#   source:
+#     token: {{tracker-api-token}}
+#     project_id: {{tracker-project-id}}
+#     tracker_url: {{tracker-url}}
