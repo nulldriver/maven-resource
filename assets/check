@@ -8,19 +8,11 @@ exec 1>&2 # redirect all output to stderr for logging
 
 source $(dirname $0)/common.sh
 
-source=$1
-
-if [ -z "$source" ]; then
-  echo "usage: $0 <path/to/source>"
-  exit 1
-fi
-
-cd $source
-
 # for jq
 PATH=/usr/local/bin:$PATH
 
 payload=$(mktemp $TMPDIR/git-resource-request.XXXXXX)
+working=$(mktemp $TMPDIR/git-resource-working.XXXXXX)
 
 cat > $payload <&0
 
@@ -45,9 +37,9 @@ cert=""
 if [ "$skip_cert_check" = "true" ]; then
   cert="-k"
 elif [ -n "$repository_cert" ]; then
-  mkdir $source/ssl
-  echo "$repository_cert" > $source/ssl/repository.crt
-  cert="--cacert $source/ssl/repository.crt"
+  mkdir $working/ssl
+  echo "$repository_cert" > $working/ssl/repository.crt
+  cert="--cacert $working/ssl/repository.crt"
 fi
 
 metadataUrl="$url/${groupId//.//}/$artifactId/maven-metadata.xml"
