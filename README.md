@@ -2,6 +2,8 @@
 
 [![ci.anvil.pcfdemo.com](https://ci.anvil.pcfdemo.com/api/v1/teams/main/pipelines/maven-resource/jobs/build/badge)](https://ci.anvil.pcfdemo.com/teams/main/pipelines/maven-resource)
 
+Docker Hub: https://hub.docker.com/r/patrickcrocker/maven-resource/
+
 Deploys and retrieve artifacts from a Maven Repository Manager.
 
 
