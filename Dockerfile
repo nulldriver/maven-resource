@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-alpine
+FROM openjdk:8-jdk
 
 RUN apk add --no-cache curl tar bash jq libxml2-utils
 
