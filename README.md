@@ -10,6 +10,8 @@ Deploys and retrieve artifacts from a Maven Repository Manager.
 
 * `url`: *Required.* The location of the repository.
 
+* `snapshot_url`: *Optional.* The location of the snapshot repository.
+
 * `artifact`: *Required.* The artifact coordinates in the form of _groupId:artifactId:type[:classifier]_
 
 * `username`: *Optional.* Username for accessing an authenticated repository.

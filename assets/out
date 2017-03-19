@@ -26,21 +26,22 @@ payload=$(mktemp $TMPDIR/maven-resource-request.XXXXXX)
 
 cat > $payload <&0
 
-url=$(jq -r '.source.url // ""' < $payload)
-artifact=$(jq -r '.source.artifact // ""' < $payload)
-username=$(jq -r '.source.username // ""' < $payload)
-password=$(jq -r '.source.password // ""' < $payload)
-skip_cert_check=$(jq -r '.source.skip_cert_check // ""' < $payload)
-repository_cert=$(jq -r '.source.repository_cert // ""' < $payload)
+url=$(jq -r '.source.url //empty' < $payload)
+snapshot_url=$(jq -r '.source.snapshot_url //empty' < $payload)
+artifact=$(jq -r '.source.artifact //empty' < $payload)
+username=$(jq -r '.source.username //empty' < $payload)
+password=$(jq -r '.source.password //empty' < $payload)
+skip_cert_check=$(jq -r '.source.skip_cert_check //empty' < $payload)
+repository_cert=$(jq -r '.source.repository_cert //empty' < $payload)
 
-file=$(jq -r '.params.file // ""' < $payload)
-pom_file=$(jq -r '.params.pom_file // ""' < $payload)
-version_file=$(jq -r '.params.version_file // ""' < $payload)
+file=$(jq -r '.params.file //empty' < $payload)
+pom_file=$(jq -r '.params.pom_file //empty' < $payload)
+version_file=$(jq -r '.params.version_file //empty' < $payload)
 
-sourceMavenOpts=$(jq -r '.source.maven_opts // ""' < $payload)
-sourceMavenConfig=$(jq -r '.source.maven_config // ""' < $payload)
-paramsMavenOpts=$(jq -r '.params.maven_opts // ""' < $payload)
-paramsMavenConfig=$(jq -r '.params.maven_config // ""' < $payload)
+sourceMavenOpts=$(jq -r '.source.maven_opts //empty' < $payload)
+sourceMavenConfig=$(jq -r '.source.maven_config //empty' < $payload)
+paramsMavenOpts=$(jq -r '.params.maven_opts //empty' < $payload)
+paramsMavenConfig=$(jq -r '.params.maven_config //empty' < $payload)
 
 # Allow overriding the source config values
 export MAVEN_OPTS=${paramsMavenOpts:-$sourceMavenOpts}
@@ -81,6 +82,14 @@ elif [ -n "$repository_cert" ]; then
   keytool -import -file $source/ssl/repository.crt -alias CAAlias -keystore $source/ssl/truststore.jks -storepass changeit -noprompt
   MAVEN_OPTS="$MAVEN_OPTS -Djavax.net.ssl.trustStore=$source/ssl/truststore.jks \
                           -Djavax.net.ssl.trustStorePassword=changeit"
+fi
+
+get_pom_version() {
+  printf 'POM_VERSION=${project.version}\n0\n' | $resource_dir/mvnw help:evaluate -f $pom_file | grep '^POM_VERSION' | cut -d = -f 2
+}
+
+if [ -n "$snapshot_url" ] && [ -f "$pom_file" ] && [[ "$(get_pom_version)" = *-SNAPSHOT ]]; then
+  url=$snapshot_url
 fi
 
 args=

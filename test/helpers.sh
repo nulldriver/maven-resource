@@ -75,15 +75,19 @@ check_artifact() {
   local version=$3
   local src=$4
 
-  jq -n "{
+  jq -n \
+  --arg url "$url" \
+  --arg artifact "$artifact" \
+  --arg version "$version" \
+  '{
     source: {
-      url: $(echo $url | jq -R .),
-      artifact: $(echo $artifact | jq -R .)
+      url: $url,
+      artifact: $artifact
     },
     version: {
-      version: $(echo $version | jq -R .)
+      version: $version
     }
-  }" | $resource_dir/check "$src" | tee /dev/stderr
+  }' | $resource_dir/check "$src" | tee /dev/stderr
 }
 
 create_version_file() {
@@ -102,20 +106,25 @@ get_artifact() {
     local version=$3
     local src=$4
 
-    jq -n "{
+    jq -n \
+    --arg url "$url" \
+    --arg artifact "$artifact" \
+    --arg version "$version" \
+    '{
       source: {
-        url: $(echo $url | jq -R .),
-        artifact: $(echo $artifact | jq -R .)
+        url: $url,
+        artifact: $artifact
       },
       version: {
-        version: $(echo $version | jq -R .)
+        version: $version
       }
-    }" | $resource_dir/in "$src" | tee /dev/stderr
+    }' | $resource_dir/in "$src" | tee /dev/stderr
 }
 
 deploy_without_pom_without_credentials() {
 
   local url=$1
+  local snapshot_url=${4:-''}
   local version=$2
   local src=$3
 
@@ -134,19 +143,31 @@ deploy_without_pom_without_credentials() {
 
   # Mock the pom.xml
   local pom=build-output/pom.xml
-  cp $test_dir/resources/pom-release.xml $src/$pom
+  if [[ "$version" = *-SNAPSHOT ]]; then
+    cp $test_dir/resources/pom-release.xml $src/$pom
+  else
+    cp $test_dir/resources/pom-snapshot.xml $src/$pom
+  fi
 
-  jq -n "{
+  jq -n \
+  --arg file "$file" \
+  --arg pom "$pom" \
+  --arg version_file "$version_file" \
+  --arg url "$url" \
+  --arg snapshot_url "$snapshot_url" \
+  --arg artifact "$artifact" \
+  '{
     params: {
-      file: $(echo $file | jq -R .),
-      pom_file: $(echo $pom | jq -R .),
-      version_file: $(echo $version_file | jq -R .)
+      file: $file,
+      pom_file: $pom,
+      version_file: $version_file
     },
     source: {
-      url: $(echo $url | jq -R .),
-      artifact: $(echo $artifact | jq -R .)
+      url: $url,
+      snapshot_url: $snapshot_url,
+      artifact: $artifact
     }
-  }" | $resource_dir/out "$src" | tee /dev/stderr
+  }' | $resource_dir/out "$src" | tee /dev/stderr
 }
 
 deploy_without_pom_with_credentials() {
@@ -155,7 +176,8 @@ deploy_without_pom_with_credentials() {
   local version=$2
   local username=$3
   local password=$4
-  local repository_cert=$(echo "$5" | awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}')
+  # local repository_cert=$(echo "$5" | awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}')
+  local repository_cert=$5
   local src=$6
 
   local version_file=$(create_version_file "$version" "$src")
@@ -171,21 +193,27 @@ deploy_without_pom_with_credentials() {
   mkdir $src/build-output
   touch $src/build-output/$artifactId-$version.$packaging
 
-  cat <<EOF | $resource_dir/out "$src" | tee /dev/stderr
-  {
-    "params": {
-      "file": "$file",
-      "version_file": "$version_file"
+  jq -n \
+  --arg file "$file" \
+  --arg version_file "$version_file" \
+  --arg url "$url" \
+  --arg artifact "$artifact" \
+  --arg username "$username" \
+  --arg password "$password" \
+  --arg repository_cert "$repository_cert" \
+  '{
+    params: {
+      file: $file,
+      version_file: $version_file
     },
-    "source": {
-      "url": "$url",
-      "artifact": "$artifact",
-      "username": "$username",
-      "password": "$password",
-      "repository_cert": "$repository_cert"
+    source: {
+      url: $url,
+      artifact: $artifact,
+      username: $username,
+      password: $password,
+      repository_cert: $repository_cert
     }
-  }
-EOF
+  }' | $resource_dir/out "$src" | tee /dev/stderr
 }
 
 # deploy_with_pom_without_credentials() {
