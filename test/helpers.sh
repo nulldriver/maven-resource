@@ -172,13 +172,14 @@ deploy_without_pom_without_credentials() {
 
 deploy_without_pom_with_credentials() {
 
-  local url=$1
-  local version=$2
-  local username=$3
-  local password=$4
+  local version=$1
+  local username=$2
+  local password=$3
   # local repository_cert=$(echo "$5" | awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}')
-  local repository_cert=$5
-  local src=$6
+  local repository_cert=$4
+  local src=$5
+  local url=$6
+  local snapshot_url=$7
 
   local version_file=$(create_version_file "$version" "$src")
 
@@ -197,6 +198,7 @@ deploy_without_pom_with_credentials() {
   --arg file "$file" \
   --arg version_file "$version_file" \
   --arg url "$url" \
+  --arg snapshot_url "$snapshot_url" \
   --arg artifact "$artifact" \
   --arg username "$username" \
   --arg password "$password" \
@@ -208,6 +210,7 @@ deploy_without_pom_with_credentials() {
     },
     source: {
       url: $url,
+      snapshot_url: $snapshot_url,
       artifact: $artifact,
       username: $username,
       password: $password,
