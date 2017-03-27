@@ -10,9 +10,9 @@ trap "rm -rf $TMPDIR_ROOT" EXIT
 test_dir=$(dirname $0)
 
 if [ -d /opt/resource ]; then
-  resource_dir=/opt/resource
+  export resource_dir=/opt/resource
 else
-  resource_dir=$(cd $(dirname $0)/../assets && pwd)
+  export resource_dir=$(cd $(dirname $0)/../assets && pwd)
 fi
 
 source $resource_dir/common.sh
@@ -69,6 +69,40 @@ deploy_artifact() {
   echo $version
 }
 
+deploy_artifact_to_manager_with_pom() {
+
+  local project=$1
+  local version=$2
+
+  local src=$(mktemp -d $TMPDIR/out-src.XXXXXX)
+
+  cp -R $project $src/project
+
+  jq -n \
+  --arg file $src/project/target/project-$version.jar \
+  --arg pom_file $src/project/pom.xml \
+  --arg url $REPO_URL \
+  --arg snapshot_url $REPO_SNAPSHOT_URL \
+  --arg artifact 'com.example:project:jar' \
+  --arg username $REPO_USERNAME \
+  --arg password $REPO_PASSWORD \
+  --arg repo_cert "$REPO_CERT" \
+  '{
+    params: {
+      file: $file,
+      pom_file: $pom_file
+    },
+    source: {
+      url: $url,
+      snapshot_url: $snapshot_url,
+      artifact: $artifact,
+      username: $username,
+      password: $password,
+      repository_cert: $repo_cert
+    }
+  }' | $resource_dir/out "$src" | tee /dev/stderr
+}
+
 check_artifact() {
   local url=$1
   local artifact=$2
@@ -86,6 +120,35 @@ check_artifact() {
     },
     version: {
       version: $version
+    }
+  }' | $resource_dir/check "$src" | tee /dev/stderr
+}
+
+check_artifact_from_manager() {
+
+  local version=$1
+
+  local src=$(mktemp -d $TMPDIR/check-src.XXXXXX)
+
+  jq -n \
+  --arg version $version \
+  --arg url $REPO_URL \
+  --arg snapshot_url $REPO_SNAPSHOT_URL \
+  --arg artifact 'com.example:project:jar' \
+  --arg username $REPO_USERNAME \
+  --arg password $REPO_PASSWORD \
+  --arg repo_cert "$REPO_CERT" \
+  '{
+    version: {
+      version: $version
+    },
+    source: {
+      url: $url,
+      snapshot_url: $snapshot_url,
+      artifact: $artifact,
+      username: $username,
+      password: $password,
+      repository_cert: $repo_cert
     }
   }' | $resource_dir/check "$src" | tee /dev/stderr
 }
