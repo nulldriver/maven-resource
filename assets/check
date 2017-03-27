@@ -16,7 +16,8 @@ working=$TMPDIR/maven-resource-working
 
 cat > $payload <&0
 
-url=$(jq -r '.source.url // ""' < $payload)
+release_url=$(jq -r '.source.url // ""' < $payload)
+snapshot_url=$(jq -r '.source.snapshot_url //empty' < $payload)
 artifact=$(jq -r '.source.artifact // ""' < $payload)
 version=$(jq -r '.version.version // ""' < $payload)
 username=$(jq -r '.source.username // ""' < $payload)
@@ -24,9 +25,16 @@ password=$(jq -r '.source.password // ""' < $payload)
 skip_cert_check=$(jq -r '.source.skip_cert_check // ""' < $payload)
 repository_cert=$(jq -r '.source.repository_cert // ""' < $payload)
 
+# TODO: Add more error checking
+if [ -z "$release_url" ] && [ -z "$snapshot_url" ] ; then
+  echo "invalid payload (must specify url or snapshot_url)"
+  exit 1
+fi
+
 # groupId:artifactId:type[:classifier]
 groupId=$(get_group_id $artifact)
 artifactId=$(get_artifact_id $artifact)
+packaging=$(get_packaging $artifact)
 
 auth=""
 if [ -n "$username" ]; then
@@ -42,18 +50,26 @@ elif [ -n "$repository_cert" ]; then
   cert="--cacert $working/ssl/repository.crt"
 fi
 
-metadataUrl="$url/${groupId//.//}/$artifactId/maven-metadata.xml"
+if [ -n "$snapshot_url" ] && [[ "$version" = *-SNAPSHOT ]]; then
+  url=$snapshot_url
+  metadataUrl="$url/${groupId//.//}/$artifactId/$version/maven-metadata.xml"
+else
+  url=$release_url
+  metadataUrl="$url/${groupId//.//}/$artifactId/maven-metadata.xml"
+fi
 
-output=$(curl -s $cert $auth $metadataUrl)
+metadata=$(curl -s $cert $auth $metadataUrl)
 
 declare -a versions=( )
-if [ "$version" = "latest" ] || [ -z "$version" ]; then
-  versions[1]=$(echo $output | xmllint --xpath "/metadata/versioning/versions/version[last()]/text()" - 2>/dev/null)
+if [[ "$version" = *-SNAPSHOT ]]; then
+  versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/snapshotVersions/snapshotVersion[extension='$packaging']/value/text()" - 2>/dev/null)
+elif [ "$version" = "latest" ] || [ -z "$version" ]; then
+  versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/versions/version[last()]/text()" - 2>/dev/null)
 else
-  itemsCount=$(echo $output | xmllint --xpath 'count(/metadata/versioning/versions/version)' -)
+  itemsCount=$(echo $metadata | xmllint --xpath 'count(/metadata/versioning/versions/version)' - 2>/dev/null)
 
   for (( i=1; i <= $itemsCount; i++ )); do
-    versions[$i]=$(echo $output | xmllint --xpath "/metadata/versioning/versions/version[$i]/text()" -)
+    versions[$i]=$(echo $metadata | xmllint --xpath "/metadata/versioning/versions/version[$i]/text()" - 2>/dev/null)
   done
 fi
 

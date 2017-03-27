@@ -24,7 +24,7 @@ payload=$(mktemp $TMPDIR/maven-resource-request.XXXXXX)
 
 cat > $payload <&0
 
-url=$(jq -r '.source.url //empty' < $payload)
+release_url=$(jq -r '.source.url //empty' < $payload)
 snapshot_url=$(jq -r '.source.snapshot_url //empty' < $payload)
 artifact=$(jq -r '.source.artifact //empty' < $payload)
 version=$(jq -r '.version.version //empty' < $payload)
@@ -34,9 +34,8 @@ skip_cert_check=$(jq -r '.source.skip_cert_check //empty' < $payload)
 repository_cert=$(jq -r '.source.repository_cert //empty' < $payload)
 
 # TODO: Add more error checking
-# TODO: Add more error checking
-if [ -z "$url" ]; then
-  echo "invalid payload (missing url)"
+if [ -z "$release_url" ] && [ -z "$snapshot_url" ] ; then
+  echo "invalid payload (must specify url or snapshot_url)"
   exit 1
 fi
 
@@ -79,6 +78,8 @@ fi
 
 if [ -n "$snapshot_url" ] && [[ "$version" = *-SNAPSHOT ]]; then
   url=$snapshot_url
+else
+  url=$release_url
 fi
 
 args=
