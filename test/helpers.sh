@@ -88,6 +88,7 @@ deploy_artifact_to_manager_with_pom() {
   --arg password $REPO_PASSWORD \
   --arg repo_cert "$REPO_CERT" \
   --arg disable_redeploy "true" \
+  --arg debug "true" \
   '{
     params: {
       file: $file,
@@ -100,7 +101,8 @@ deploy_artifact_to_manager_with_pom() {
       username: $username,
       password: $password,
       disable_redeploy: $disable_redeploy,
-      repository_cert: $repo_cert
+      repository_cert: $repo_cert,
+      debug: $debug
     }
   }' | $resource_dir/out "$src" | tee /dev/stderr
 }

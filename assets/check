@@ -16,6 +16,11 @@ working=$TMPDIR/maven-resource-working
 
 cat > $payload <&0
 
+debug=$(jq -r '.source.debug //empty' < $payload)
+if [ "$debug" = "true" ]; then
+  set -x
+fi
+
 release_url=$(jq -r '.source.url // ""' < $payload)
 snapshot_url=$(jq -r '.source.snapshot_url //empty' < $payload)
 artifact=$(jq -r '.source.artifact // ""' < $payload)
