@@ -122,6 +122,7 @@ if [[ "$version" = *-SNAPSHOT ]]; then
   --arg artifact "$artifact" \
   --arg username "$username" \
   --arg password "$password" \
+  --arg skip_cert_check "$skip_cert_check" \
   --arg repo_cert "$repository_cert" \
   '{
     version: {
@@ -133,6 +134,7 @@ if [[ "$version" = *-SNAPSHOT ]]; then
       artifact: $artifact,
       username: $username,
       password: $password,
+      skip_cert_check: $skip_cert_check,
       repository_cert: $repo_cert
     }
   }' | $resource_dir/check "$source" | jq -r '.[].version')
