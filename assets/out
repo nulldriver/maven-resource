@@ -112,7 +112,7 @@ if [ "$disable_redeploy" = "true" ] && [ "$isSnapshot" != true ]; then
   foundVersion=$(jq -n \
   --arg version "$version" \
   --arg url "$release_url" \
-  --arg artifact 'com.example:project:jar' \
+  --arg artifact "$artifact" \
   --arg username "$username" \
   --arg password "$password" \
   --arg skip_cert_check "$skip_cert_check" \
