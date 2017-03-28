@@ -51,7 +51,7 @@ elif [ -n "$repository_cert" ]; then
 fi
 
 # convert 1.0.0-20170328.031519-19 to 1.0.0-SNAPSHOT
-uniqueVersion=$(echo "$version" | grep -oE "[0-9]{8}\.[0-9]{6}-[0-9]{1,}")
+uniqueVersion=$(echo "$version" | grep -oE "[0-9]{8}\.[0-9]{6}-[0-9]{1,}" || true)
 if [ -n "$uniqueVersion" ]; then
   version=$(echo ${version%-$uniqueVersion}-SNAPSHOT)
 fi
