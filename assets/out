@@ -31,6 +31,7 @@ snapshot_url=$(jq -r '.source.snapshot_url //empty' < $payload)
 artifact=$(jq -r '.source.artifact //empty' < $payload)
 username=$(jq -r '.source.username //empty' < $payload)
 password=$(jq -r '.source.password //empty' < $payload)
+disable_redeploy=$(jq -r '.source.disable_redeploy //empty' < $payload)
 skip_cert_check=$(jq -r '.source.skip_cert_check //empty' < $payload)
 repository_cert=$(jq -r '.source.repository_cert //empty' < $payload)
 
@@ -100,6 +101,40 @@ if [ -n "$snapshot_url" ] && [ "$isSnapshot" = true ]; then
   url=$snapshot_url
 else
   url=$release_url
+fi
+
+if [ "$disable_redeploy" = "true" ] && [ "$isSnapshot" != true ]; then
+  foundVersion=$(jq -n \
+  --arg version "$version" \
+  --arg url "$release_url" \
+  --arg artifact 'com.example:project:jar' \
+  --arg username "$username" \
+  --arg password "$password" \
+  --arg skip_cert_check "$skip_cert_check" \
+  --arg repo_cert "$repository_cert" \
+  '{
+    version: {
+      version: $version
+    },
+    source: {
+      url: $url,
+      artifact: $artifact,
+      username: $username,
+      password: $password,
+      skip_cert_check: $skip_cert_check,
+      repository_cert: $repo_cert
+    }
+  }' | $resource_dir/check "$source" | jq -r '.[].version')
+
+  if [ "$version" = "$foundVersion" ]; then
+    echo "WARNING: disable_redeploy enabled: Found existing version $version in repository $release_url. Skipping deploy!"
+    jq -n \
+    --arg version $version \
+    '{
+      version: {version: $version}
+    }' >&3
+    exit 0
+  fi
 fi
 
 args=
