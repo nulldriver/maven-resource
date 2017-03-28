@@ -92,7 +92,11 @@ elif [ -n "$repository_cert" ]; then
                           -Djavax.net.ssl.trustStorePassword=changeit"
 fi
 
-if [ -n "$snapshot_url" ] && [[ "$version" = *-SNAPSHOT ]]; then
+# test for 1.0.0-SNAPSHOT and for 1.0.0-20170328.031519-19
+[[ "$version" = *-SNAPSHOT ]] && isSnapshot=true
+echo "$version" | grep -oEq "[0-9]{8}\.[0-9]{6}-[0-9]{1,}" && isSnapshot=true
+
+if [ -n "$snapshot_url" ] && [ "$isSnapshot" = true ]; then
   url=$snapshot_url
 else
   url=$release_url
