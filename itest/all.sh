@@ -21,10 +21,11 @@ REPO_CERT=$(openssl s_client -connect $DOCKER_MACHINE_IP:8443 -showcerts </dev/n
 
 it_can_deploy_snapshot_to_manager_with_pom() {
 
-  local project=$BASE_DIR/test/fixtures/project-snapshot
+  local project=$BASE_DIR/test/fixtures/project
   local version=1.0.0-SNAPSHOT
+  local debug=false
 
-  local snapshot_version=$(deploy_artifact_to_manager_with_pom $project $version | jq -r '.version.version')
+  local snapshot_version=$(deploy_artifact_to_manager_with_pom $project $version $debug | jq -r '.version.version')
   local snapshot_date=$(env TZ=UTC date '+%Y%m%d.')
 
   [[ "$snapshot_version" = "${version%-SNAPSHOT}-$snapshot_date"* ]]
@@ -32,10 +33,27 @@ it_can_deploy_snapshot_to_manager_with_pom() {
 
 it_can_deploy_release_to_manager_with_pom() {
 
-  local project=$BASE_DIR/test/fixtures/project-release
+  local project=$BASE_DIR/test/fixtures/project
   local version=1.0.0
+  local debug=false
 
-  deploy_artifact_to_manager_with_pom $project $version | \
+  deploy_artifact_to_manager_with_pom $project $version $debug | \
+  jq -e \
+  --arg version $version \
+  '
+    .version == {version: $version}
+  '
+
+  version=1.0.1
+  deploy_artifact_to_manager_with_pom $project $version $debug | \
+  jq -e \
+  --arg version $version \
+  '
+    .version == {version: $version}
+  '
+
+  version=1.0.2
+  deploy_artifact_to_manager_with_pom $project $version $debug | \
   jq -e \
   --arg version $version \
   '
@@ -46,8 +64,9 @@ it_can_deploy_release_to_manager_with_pom() {
 it_can_check_snapshot_from_manager() {
 
   local version=1.0.0-SNAPSHOT
+  local debug=false
 
-  local snapshot_version=$(check_artifact_from_manager $version | jq -r '.[].version')
+  local snapshot_version=$(check_artifact_from_manager $version $debug | jq -r '.[].version')
   local snapshot_date=$(env TZ=UTC date '+%Y%m%d.')
 
   [[ "$snapshot_version" = "${version%-SNAPSHOT}-$snapshot_date"* ]]
@@ -55,14 +74,16 @@ it_can_check_snapshot_from_manager() {
 
 it_can_check_release_from_manager() {
 
-  local version=1.0.0
+  local version=1.0.1
+  local debug=false
 
-  check_artifact_from_manager $version | \
+  check_artifact_from_manager $version $debug | \
   jq -e \
   --arg version $version \
   '
     . == [
-      {version: $version}
+      {version: $version},
+      {version: "1.0.2"}
     ]
   '
 }

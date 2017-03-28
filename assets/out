@@ -109,7 +109,7 @@ else
 fi
 
 if [ "$disable_redeploy" = "true" ] && [ "$isSnapshot" != true ]; then
-  foundVersion=$(jq -n \
+  foundVersions=$(jq -n \
   --arg version "$version" \
   --arg url "$release_url" \
   --arg artifact "$artifact" \
@@ -133,15 +133,17 @@ if [ "$disable_redeploy" = "true" ] && [ "$isSnapshot" != true ]; then
     }
   }' | $resource_dir/check "$source" | jq -r '.[].version')
 
-  if [ "$version" = "$foundVersion" ]; then
-    echo "WARNING: disable_redeploy enabled: Found existing version $version in repository $release_url. Skipping deploy!"
-    jq -n \
-    --arg version $version \
-    '{
-      version: {version: $version}
-    }' >&3
-    exit 0
-  fi
+  for foundVersion in $foundVersions; do
+    if [ "$version" = "$foundVersion" ]; then
+      echo "WARNING: disable_redeploy enabled: Found existing version $version in repository $release_url. Skipping deploy!"
+      jq -n \
+      --arg version $version \
+      '{
+        version: {version: $version}
+      }' >&3
+      exit 0
+    fi
+  done
 fi
 
 args=

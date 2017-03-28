@@ -38,14 +38,13 @@ it_can_check_from_three_versions() {
   local version2=$(deploy_artifact $url $artifact '1.0.0-rc.2' $src)
   local version3=$(deploy_artifact $url $artifact '1.0.0-rc.3' $src)
 
-  check_artifact $url $artifact $version1 $src | \
+  check_artifact $url $artifact $version2 $src | \
   jq -e \
   --arg version1 $version1 \
   --arg version2 $version2 \
   --arg version3 $version3 \
   '
     . == [
-      {version: $version1},
       {version: $version2},
       {version: $version3}
     ]

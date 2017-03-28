@@ -78,9 +78,17 @@ elif [ "$version" = "latest" ] || [ -z "$version" ]; then
   versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/versions/version[last()]/text()" - 2>/dev/null)
 else
   itemsCount=$(echo $metadata | xmllint --xpath 'count(/metadata/versioning/versions/version)' - 2>/dev/null)
-
+  found=false
   for (( i=1; i <= $itemsCount; i++ )); do
-    versions[$i]=$(echo $metadata | xmllint --xpath "/metadata/versioning/versions/version[$i]/text()" - 2>/dev/null)
+
+    current=$(echo $metadata | xmllint --xpath "/metadata/versioning/versions/version[$i]/text()" - 2>/dev/null)
+    if [ "$found" = false ] && [ "$current" = "$version" ]; then
+      found=true
+    fi
+
+    if [ "$found" = true ]; then
+      versions[$i]=$current
+    fi
   done
 fi
 

@@ -73,10 +73,20 @@ deploy_artifact_to_manager_with_pom() {
 
   local project=$1
   local version=$2
+  local debug=$3
 
   local src=$(mktemp -d $TMPDIR/out-src.XXXXXX)
 
   cp -R $project $src/project
+
+  {
+    pushd $src/project
+
+    ./mvnw versions:set -DnewVersion=$version
+    ./mvnw clean package
+
+    popd
+  } >/dev/stderr
 
   jq -n \
   --arg file $src/project/target/project-$version.jar \
@@ -88,7 +98,7 @@ deploy_artifact_to_manager_with_pom() {
   --arg password $REPO_PASSWORD \
   --arg repo_cert "$REPO_CERT" \
   --arg disable_redeploy "true" \
-  --arg debug "true" \
+  --arg debug "$debug" \
   '{
     params: {
       file: $file,
@@ -131,6 +141,7 @@ check_artifact() {
 check_artifact_from_manager() {
 
   local version=$1
+  local debug=$2
 
   local src=$(mktemp -d $TMPDIR/check-src.XXXXXX)
 
@@ -142,6 +153,7 @@ check_artifact_from_manager() {
   --arg username $REPO_USERNAME \
   --arg password $REPO_PASSWORD \
   --arg repo_cert "$REPO_CERT" \
+  --arg debug "$debug" \
   '{
     version: {
       version: $version
@@ -152,7 +164,8 @@ check_artifact_from_manager() {
       artifact: $artifact,
       username: $username,
       password: $password,
-      repository_cert: $repo_cert
+      repository_cert: $repo_cert,
+      debug: $debug
     }
   }' | $resource_dir/check "$src" | tee /dev/stderr
 }
