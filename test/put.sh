@@ -30,7 +30,7 @@ it_can_deploy_snapshot_to_folder_without_pom() {
   local version=1.0.0-rc.0-SNAPSHOT
 
   local snapshot_version=$(deploy_without_pom_without_credentials $url $version $src $snapshot_url | jq -r '.version.version')
-  local snapshot_date=$(date '+%Y%m%d.')
+  local snapshot_date=$(env TZ=UTC date '+%Y%m%d.')
 
   [[ "$snapshot_version" = "${version%-SNAPSHOT}-$snapshot_date"* ]]
 }

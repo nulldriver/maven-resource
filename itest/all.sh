@@ -25,7 +25,7 @@ it_can_deploy_snapshot_to_manager_with_pom() {
   local version=1.0.0-SNAPSHOT
 
   local snapshot_version=$(deploy_artifact_to_manager_with_pom $project $version | jq -r '.version.version')
-  local snapshot_date=$(date '+%Y%m%d.')
+  local snapshot_date=$(env TZ=UTC date '+%Y%m%d.')
 
   [[ "$snapshot_version" = "${version%-SNAPSHOT}-$snapshot_date"* ]]
 }
@@ -48,7 +48,7 @@ it_can_check_snapshot_from_manager() {
   local version=1.0.0-SNAPSHOT
 
   local snapshot_version=$(check_artifact_from_manager $version | jq -r '.[].version')
-  local snapshot_date=$(date '+%Y%m%d.')
+  local snapshot_date=$(env TZ=UTC date '+%Y%m%d.')
 
   [[ "$snapshot_version" = "${version%-SNAPSHOT}-$snapshot_date"* ]]
 }
