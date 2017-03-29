@@ -116,7 +116,7 @@ if [ "$disable_redeploy" = "true" ] && [ "$isSnapshot" != true ]; then
   --arg username "$username" \
   --arg password "$password" \
   --arg skip_cert_check "$skip_cert_check" \
-  --arg repo_cert "$repository_cert" \
+  --arg repository_cert "$repository_cert" \
   --arg debug "$debug" \
   '{
     version: {
@@ -128,7 +128,7 @@ if [ "$disable_redeploy" = "true" ] && [ "$isSnapshot" != true ]; then
       username: $username,
       password: $password,
       skip_cert_check: $skip_cert_check,
-      repository_cert: $repo_cert,
+      repository_cert: $repository_cert,
       debug: $debug
     }
   }' | $resource_dir/check "$source" | jq -r '.[].version')
@@ -171,7 +171,7 @@ if [[ "$version" = *-SNAPSHOT ]]; then
   --arg username "$username" \
   --arg password "$password" \
   --arg skip_cert_check "$skip_cert_check" \
-  --arg repo_cert "$repository_cert" \
+  --arg repository_cert "$repository_cert" \
   --arg debug "$debug" \
   '{
     version: {
@@ -184,7 +184,7 @@ if [[ "$version" = *-SNAPSHOT ]]; then
       username: $username,
       password: $password,
       skip_cert_check: $skip_cert_check,
-      repository_cert: $repo_cert,
+      repository_cert: $repository_cert,
       debug: $debug
     }
   }' | $resource_dir/check "$source" | jq -r '.[].version')
