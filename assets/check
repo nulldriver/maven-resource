@@ -21,14 +21,14 @@ if [ "$debug" = "true" ]; then
   set -x
 fi
 
-release_url=$(jq -r '.source.url // ""' < $payload)
+release_url=$(jq -r '.source.url //empty' < $payload)
 snapshot_url=$(jq -r '.source.snapshot_url //empty' < $payload)
-artifact=$(jq -r '.source.artifact // ""' < $payload)
-version=$(jq -r '.version.version // ""' < $payload)
-username=$(jq -r '.source.username // ""' < $payload)
-password=$(jq -r '.source.password // ""' < $payload)
-skip_cert_check=$(jq -r '.source.skip_cert_check // ""' < $payload)
-repository_cert=$(jq -r '.source.repository_cert // ""' < $payload)
+artifact=$(jq -r '.source.artifact //empty' < $payload)
+version=$(jq -r '.version.version //empty' < $payload)
+username=$(jq -r '.source.username //empty' < $payload)
+password=$(jq -r '.source.password //empty' < $payload)
+skip_cert_check=$(jq -r '.source.skip_cert_check //empty' < $payload)
+repository_cert=$(jq -r '.source.repository_cert //empty' < $payload)
 
 # TODO: Add more error checking
 if [ -z "$release_url" ] && [ -z "$snapshot_url" ] ; then
@@ -61,11 +61,13 @@ if [ -n "$uniqueVersion" ]; then
   version=$(echo ${version%-$uniqueVersion}-SNAPSHOT)
 fi
 
-if [ -n "$snapshot_url" ] && [[ "$version" = *-SNAPSHOT ]]; then
-  url=$snapshot_url
+url=$release_url
+if [[ "$version" = *-SNAPSHOT ]]; then
+  if [ -n "$snapshot_url" ]; then
+    url=$snapshot_url
+  fi
   metadataUrl="$url/${groupId//.//}/$artifactId/$version/maven-metadata.xml"
 else
-  url=$release_url
   metadataUrl="$url/${groupId//.//}/$artifactId/maven-metadata.xml"
 fi
 
