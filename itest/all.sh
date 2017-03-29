@@ -10,88 +10,158 @@ source $BASE_DIR/test/helpers.sh
 # exports REPO_DOMAIN
 source $BASE_DIR/itest/nexus/nexus.sh
 
-REPO_URL=https://$REPO_DOMAIN/repository/maven-releases
-REPO_SNAPSHOT_URL=https://$REPO_DOMAIN/repository/maven-snapshots
-REPO_USERNAME=admin
-REPO_PASSWORD=admin123
-REPO_CERT=$(openssl s_client -connect $REPO_DOMAIN -showcerts </dev/null 2>/dev/null|openssl x509 -outform PEM)
-
 # 1.0.0-20170328.031519-19
 readonly UNIQUE_SNAPSHOT_PATTERN="\-[0-9]{8}\.[0-9]{6}-[0-9]{1,}"
+readonly SOURCE_URL=https://$REPO_DOMAIN/repository/maven-releases
+readonly SOURCE_SNAPSHOT_URL=https://$REPO_DOMAIN/repository/maven-snapshots
+readonly SOURCE_USERNAME=admin
+readonly SOURCE_PASSWORD=admin123
+readonly SOURCE_SKIP_CERT_CHECK=false
+readonly SOURCE_REPOSITORY_CERT=$(openssl s_client -connect $REPO_DOMAIN -showcerts </dev/null 2>/dev/null|openssl x509 -outform PEM)
+readonly SOURCE_DISABLE_REDEPLOY=false
 
-it_can_deploy_snapshot_to_manager_with_pom() {
+it_can_deploy_snapshot_using_url() {
 
   local project=$BASE_DIR/test/fixtures/project
   local version=1.0.0-SNAPSHOT
   local debug=false
 
-  local snapshot_version=$(deploy_artifact_to_manager_with_pom $project $version $debug | jq -r '.version.version')
-  local snapshot_date=$(env TZ=UTC date '+%Y%m%d.')
+  REPO_URL=$SOURCE_SNAPSHOT_URL
+  REPO_SNAPSHOT_URL=
 
-  [ $(echo "$snapshot_version" | grep -oE "$UNIQUE_SNAPSHOT_PATTERN") ]
+  deploy_artifact_to_manager_with_pom $project $version $debug | jq -r '.version.version' | grep -oEq "$UNIQUE_SNAPSHOT_PATTERN"
 }
 
-it_can_deploy_releases_to_manager_with_pom() {
+it_can_deploy_snapshot_using_snapshot_url() {
 
   local project=$BASE_DIR/test/fixtures/project
-  local version=
+  local version=1.0.0-SNAPSHOT
   local debug=false
 
-  version=1.0.0
-  deploy_artifact_to_manager_with_pom $project $version $debug | \
-  jq -e \
-  --arg version $version \
-  '
-    .version == {version: $version}
-  '
+  REPO_URL=
+  REPO_SNAPSHOT_URL=$SOURCE_SNAPSHOT_URL
 
-  version=1.0.1
-  deploy_artifact_to_manager_with_pom $project $version $debug | \
-  jq -e \
-  --arg version $version \
-  '
-    .version == {version: $version}
-  '
+  deploy_artifact_to_manager_with_pom $project $version $debug | jq -r '.version.version' | grep -oEq "$UNIQUE_SNAPSHOT_PATTERN"
+}
 
-  version=1.0.2
-  deploy_artifact_to_manager_with_pom $project $version $debug | \
-  jq -e \
-  --arg version $version \
+it_can_deploy_snapshot_using_both_urls() {
+
+  local project=$BASE_DIR/test/fixtures/project
+  local version=1.0.0-SNAPSHOT
+  local debug=false
+
+  REPO_URL=$SOURCE_URL
+  REPO_SNAPSHOT_URL=$SOURCE_SNAPSHOT_URL
+
+  deploy_artifact_to_manager_with_pom $project $version $debug | jq -r '.version.version' | grep -oEq "$UNIQUE_SNAPSHOT_PATTERN"
+}
+
+it_can_deploy_release() {
+
+  local project=$BASE_DIR/test/fixtures/project
+  local version=$1
+  local debug=false
+
+  REPO_URL=$SOURCE_URL
+  REPO_SNAPSHOT_URL=
+
+  deploy_artifact_to_manager_with_pom $project $version $debug | jq -e --arg version $version \
   '
     .version == {version: $version}
   '
 }
 
-it_can_check_snapshot_from_manager() {
+it_can_check_snapshot_using_url() {
 
   local version=1.0.0-SNAPSHOT
   local debug=false
 
-  local snapshot_version=$(check_artifact_from_manager $version $debug | jq -r '.[].version')
-  local snapshot_date=$(env TZ=UTC date '+%Y%m%d.')
+  REPO_URL=$SOURCE_SNAPSHOT_URL
+  REPO_SNAPSHOT_URL=
 
-  [ $(echo "$snapshot_version" | grep -oE "$UNIQUE_SNAPSHOT_PATTERN") ]
+  check_artifact_from_manager $version $debug | jq -r '.[].version' | grep -oEq "$UNIQUE_SNAPSHOT_PATTERN"
 }
 
-it_can_check_release_from_manager() {
+it_can_check_snapshot_using_snapshot_url() {
 
-  local version=1.0.1
+  local version=1.0.0-SNAPSHOT
   local debug=false
 
-  check_artifact_from_manager $version $debug | \
-  jq -e \
-  --arg version $version \
+  REPO_URL=
+  REPO_SNAPSHOT_URL=$SOURCE_SNAPSHOT_URL
+
+  check_artifact_from_manager $version $debug | jq -r '.[].version' | grep -oEq "$UNIQUE_SNAPSHOT_PATTERN"
+}
+
+it_can_check_snapshot_using_both_urls() {
+
+  local version=1.0.0-SNAPSHOT
+  local debug=false
+
+  REPO_URL=$SOURCE_URL
+  REPO_SNAPSHOT_URL=$SOURCE_SNAPSHOT_URL
+
+  check_artifact_from_manager $version $debug | jq -r '.[].version' | grep -oEq "$UNIQUE_SNAPSHOT_PATTERN"
+}
+
+it_can_check_release() {
+
+  local version=$1
+  local latestVersion=$2
+  local debug=false
+
+  REPO_URL=$SOURCE_URL
+  REPO_SNAPSHOT_URL=$SOURCE_SNAPSHOT_URL
+
+  check_artifact_from_manager $version $debug | jq -e --arg version "$version" --arg latestVersion "$latestVersion" \
   '
     . == [
       {version: $version},
-      {version: "1.0.2"}
+      {version: $latestVersion}
     ]
   '
 }
 
-run it_can_deploy_snapshot_to_manager_with_pom
-run it_can_deploy_releases_to_manager_with_pom
-run it_can_check_snapshot_from_manager
-run it_can_check_release_from_manager
+# Run tests using repository_cert
+REPO_USERNAME=$SOURCE_USERNAME
+REPO_PASSWORD=$SOURCE_PASSWORD
+REPO_CERT=$SOURCE_REPOSITORY_CERT
+REPO_SKIP_CERT_CHECK=
+REPO_DISABLE_REDEPLOY=
+
+#---
+run it_can_deploy_snapshot_using_url
+run it_can_deploy_snapshot_using_snapshot_url
+run it_can_deploy_snapshot_using_both_urls
+
+#---
+version1="1.0.$UNIQUE_ID" && increment_unique_id
+run it_can_deploy_release $version1
+
+REPO_DISABLE_REDEPLOY=true
+it_can_deploy_release $version1
+REPO_DISABLE_REDEPLOY=
+
+#---
+version2="1.0.$UNIQUE_ID" && increment_unique_id
+run it_can_deploy_release $version2
+
+REPO_DISABLE_REDEPLOY=true
+it_can_deploy_release $version2
+REPO_DISABLE_REDEPLOY=
+
+#---
+version3="1.0.$UNIQUE_ID" && increment_unique_id
+run it_can_deploy_release $version3
+
+REPO_DISABLE_REDEPLOY=true
+it_can_deploy_release $version3
+REPO_DISABLE_REDEPLOY=
+
+#---
+run it_can_check_snapshot_using_url
+run it_can_check_snapshot_using_snapshot_url
+run it_can_check_snapshot_using_both_urls
+run it_can_check_release $version2 $version3
 
 echo -e '\e[32mall tests passed!\e[0m'
