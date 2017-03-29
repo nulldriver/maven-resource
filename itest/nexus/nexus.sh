@@ -5,9 +5,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 imageName=nexus
-dockerMachineIp=$(docker-machine ip)
+export REPO_DOMAIN="$(docker-machine ip):8443"
 
-url=https://$dockerMachineIp:8443/
+url=https://$REPO_DOMAIN/
 
 isRunning=$(docker ps | grep $imageName >/dev/null 2>&1 && echo true || echo false)
 if [ $isRunning = "false" ]; then
@@ -23,7 +23,7 @@ if [ $isRunning = "false" ]; then
         -keysize 2048 \
         -validity 365 \
         -alias nexus \
-        -dname "CN=$dockerMachineIp, OU=IT, O=Somewhere, L=Dallas, ST=TX, C=US" \
+        -dname "CN=$REPO_DOMAIN, OU=IT, O=Somewhere, L=Dallas, ST=TX, C=US" \
         -keystore $DIR/keystore.jks \
         -storepass changeit \
         -keypass changeit
