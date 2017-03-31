@@ -26,12 +26,25 @@ jobs:
   serial_groups: [version]
   plan:
   - aggregate:
+    - get: concourse-commons
+    - get: project
+      resource: maven-resource
+      passed: [build]
     - get: maven-resource-image-rc
       passed: [build]
       params: {save: true}
     - get: version
       passed: [build]
       params: {bump: final}
+  - task: generate-github-release
+    file: concourse-commons/tasks/generate-github-release.yml
+  - task: generate-commitish
+    file: concourse-commons/tasks/generate-commitish.yml
+  - put: github-release
+    params:
+      name: generate-github-release-output/release-name
+      tag: generate-github-release-output/release-tag
+      commitish: generate-commitish-output/commitish
   - put: version
     params: {file: version/version}
   - put: maven-resource-image-final
@@ -81,6 +94,19 @@ resources:
     - NOTICE.md
     - pipeline.yml
     - README.md
+
+- name: github-release
+  type: github-release
+  source:
+    access_token: {{github-release-access-token}}
+    repository: maven-resource
+    user: patrickcrocker
+
+- name: concourse-commons
+  type: git
+  source:
+    uri: {{git-concourse-commons}}
+    branch: master
 
 - name: version
   type: semver
