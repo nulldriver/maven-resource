@@ -17,13 +17,13 @@ jobs:
     params:
       build: maven-resource
       dockerfile: maven-resource/Dockerfile
-      tag: generate-docker-tags/tag-alpine
+      tag: generate-docker-tags-output/tag-alpine
       tag_as_latest: false
   - put: maven-resource-image-rc
     params:
       build: maven-resource
       dockerfile: maven-resource/debian/Dockerfile
-      tag: generate-docker-tags/tag-debian
+      tag: generate-docker-tags-output/tag-debian
       tag_as_latest: false
   - put: tracker
     params:
@@ -62,13 +62,13 @@ jobs:
     params:
       load: maven-resource-image-rc
       dockerfile: maven-resource/Dockerfile
-      tag: generate-docker-tags/tag-alpine
+      tag: generate-docker-tags-output/tag-alpine
       tag_as_latest: true
   - put: maven-resource-image-final
     params:
       load: maven-resource-image-rc
       dockerfile: maven-resource/debian/Dockerfile
-      tag: generate-docker-tags/tag-debian
+      tag: generate-docker-tags-output/tag-debian
       tag_as_latest: false
 
 - name: major
