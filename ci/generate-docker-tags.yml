@@ -1,0 +1,18 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: busybox
+    tag: '1.26'
+
+inputs:
+  - name: maven-resource
+  - name: version
+
+outputs:
+  - name: generate-docker-tags-output
+
+run:
+  path: maven-resource/ci/generate-docker-tags.sh

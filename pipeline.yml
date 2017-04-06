@@ -9,12 +9,21 @@ jobs:
       trigger: true
     - get: version
       params: {pre: rc}
+  - task: generate-docker-tags
+    file: maven-resource/ci/generate-docker-tags.yml
   - put: version
     params: {file: version/version}
   - put: maven-resource-image-rc
     params:
       build: maven-resource
-      tag: version/version
+      dockerfile: maven-resource/Dockerfile
+      tag: generate-docker-tags/tag-alpine
+      tag_as_latest: false
+  - put: maven-resource-image-rc
+    params:
+      build: maven-resource
+      dockerfile: maven-resource/debian/Dockerfile
+      tag: generate-docker-tags/tag-debian
       tag_as_latest: false
   - put: tracker
     params:
@@ -36,6 +45,8 @@ jobs:
     - get: version
       passed: [build]
       params: {bump: final}
+  - task: generate-docker-tags
+    file: maven-resource/ci/generate-docker-tags.yml
   - task: generate-github-release
     file: concourse-commons/tasks/generate-github-release.yml
   - task: generate-commitish
@@ -50,8 +61,15 @@ jobs:
   - put: maven-resource-image-final
     params:
       load: maven-resource-image-rc
-      tag: version/version
+      dockerfile: maven-resource/Dockerfile
+      tag: generate-docker-tags/tag-alpine
       tag_as_latest: true
+  - put: maven-resource-image-final
+    params:
+      load: maven-resource-image-rc
+      dockerfile: maven-resource/debian/Dockerfile
+      tag: generate-docker-tags/tag-debian
+      tag_as_latest: false
 
 - name: major
   public: true
