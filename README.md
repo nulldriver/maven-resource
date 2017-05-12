@@ -1,6 +1,6 @@
 # Version branch
 
-This `version` branch is used to store the current `semver` value in the `number` file.
+This `version` branch is used to store the current `semver` value in the `version` file.
 
 How this branch was setup:
 ```
@@ -13,4 +13,3 @@ git add .
 git commit -m "new branch"
 git push origin version
 ```
-
