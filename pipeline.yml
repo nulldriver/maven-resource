@@ -5,24 +5,26 @@ jobs:
   serial_groups: [version]
   plan:
   - aggregate:
-    - get: maven-resource
+    - get: project
+      resource: maven-resource
       trigger: true
     - get: version
       params: {pre: rc}
   - task: generate-docker-tags
-    file: maven-resource/ci/generate-docker-tags.yml
+    file: project/ci/generate-docker-tags.yml
+    output_mapping: {task-output: generate-docker-tags-output}
   - put: version
     params: {file: version/version}
   - put: maven-resource-image-rc
     params:
-      build: maven-resource
-      dockerfile: maven-resource/Dockerfile
+      build: project
+      dockerfile: project/Dockerfile
       tag: generate-docker-tags-output/tag-alpine
       tag_as_latest: false
   - put: maven-resource-image-rc
     params:
-      build: maven-resource
-      dockerfile: maven-resource/debian/Dockerfile
+      build: project
+      dockerfile: project/debian/Dockerfile
       tag: generate-docker-tags-output/tag-debian
       tag_as_latest: false
   - put: tracker
@@ -35,7 +37,7 @@ jobs:
   serial_groups: [version]
   plan:
   - aggregate:
-    - get: concourse-commons
+    - get: pipeline-tasks
     - get: project
       resource: maven-resource
       passed: [build]
@@ -46,11 +48,13 @@ jobs:
       passed: [build]
       params: {bump: final}
   - task: generate-docker-tags
-    file: maven-resource/ci/generate-docker-tags.yml
+    file: project/ci/generate-docker-tags.yml
   - task: generate-github-release
-    file: concourse-commons/tasks/generate-github-release.yml
+    file: pipeline-tasks/generate-github-release/task.yml
+    output_mapping: {task-output: generate-github-release-output}
   - task: generate-commitish
-    file: concourse-commons/tasks/generate-commitish.yml
+    file: pipeline-tasks/generate-commitish/task.yml
+    output_mapping: {task-output: generate-commitish-output}
   - put: github-release
     params:
       name: generate-github-release-output/release-name
@@ -104,8 +108,8 @@ resources:
 - name: maven-resource
   type: git
   source:
-    uri: {{git-uri}}
-    branch: {{git-branch}}
+    uri: {{maven-resource-git-uri}}
+    branch: {{maven-resource-git-branch}}
     private_key: {{git-private-key}}
     ignore_paths:
     - LICENSE
@@ -118,21 +122,21 @@ resources:
   source:
     access_token: {{github-release-access-token}}
     repository: maven-resource
-    user: patrickcrocker
+    user: {{github-release-user}}
 
-- name: concourse-commons
+- name: pipeline-tasks
   type: git
   source:
-    uri: {{git-concourse-commons}}
-    branch: master
+    uri: {{pipeline-tasks-git-uri}}
+    branch: {{pipeline-tasks-git-branch}}
 
 - name: version
   type: semver
   source:
     driver: git
     initial_version: 1.0.0-rc.0
-    uri: {{git-uri-semver}}
-    branch: version
+    uri: {{maven-resource-semver-git-uri}}
+    branch: {{maven-resource-semver-git-branch}}
     file: version
     private_key: {{git-private-key}}
 
