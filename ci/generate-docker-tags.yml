@@ -8,11 +8,11 @@ image_resource:
     tag: '1.26'
 
 inputs:
-  - name: maven-resource
+  - name: project
   - name: version
 
 outputs:
-  - name: generate-docker-tags-output
+  - name: task-output
 
 run:
-  path: maven-resource/ci/generate-docker-tags.sh
+  path: project/ci/generate-docker-tags.sh

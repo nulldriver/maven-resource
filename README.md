@@ -1,6 +1,7 @@
 # Maven Resource
 
-[![ci.anvil.pcfdemo.com](https://ci.anvil.pcfdemo.com/api/v1/teams/pcrocker/pipelines/maven-resource/jobs/build/badge)](https://ci.anvil.pcfdemo.com/teams/pcrocker/pipelines/maven-resource) [docker](https://hub.docker.com/r/patrickcrocker/maven-resource/)
+[![CI Build](https://wings.concourse.ci/api/v1/teams/sme-pcf-concourse/pipelines/maven-resource/jobs/build/badge)](https://wings.concourse.ci/teams/sme-pcf-concourse/pipelines/maven-resource)
+[![Docker Pulls](https://img.shields.io/docker/pulls/pivotalpa/maven-resource.svg)](https://hub.docker.com/r/pivotalpa/maven-resource/)
 
 Deploys and retrieve artifacts from a Maven Repository Manager.
 
@@ -43,7 +44,7 @@ resource_types:
 - name: maven-resource
   type: docker-image
   source:
-    repository: patrickcrocker/maven-resource
+    repository: pivotalpa/maven-resource
     tag: latest
 
 resources:
