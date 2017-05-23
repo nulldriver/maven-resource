@@ -15,17 +15,17 @@ jobs:
     output_mapping: {task-output: generate-docker-tags-output}
   - put: version
     params: {file: version/version}
-  - put: maven-resource-image-rc
-    params:
-      build: project
-      dockerfile: project/Dockerfile
-      tag: generate-docker-tags-output/tag-alpine
-      tag_as_latest: false
-  - put: maven-resource-image-rc
+  - put: maven-resource-image-rc-debian
     params:
       build: project
       dockerfile: project/debian/Dockerfile
       tag: generate-docker-tags-output/tag-debian
+      tag_as_latest: false
+  - put: maven-resource-image-rc-alpine
+    params:
+      build: project
+      dockerfile: project/Dockerfile
+      tag: generate-docker-tags-output/tag-alpine
       tag_as_latest: false
   - put: tracker
     params:
@@ -41,7 +41,10 @@ jobs:
     - get: project
       resource: maven-resource
       passed: [build]
-    - get: maven-resource-image-rc
+    - get: maven-resource-image-rc-alpine
+      passed: [build]
+      params: {save: true}
+    - get: maven-resource-image-rc-debian
       passed: [build]
       params: {save: true}
     - get: version
@@ -49,6 +52,7 @@ jobs:
       params: {bump: final}
   - task: generate-docker-tags
     file: project/ci/generate-docker-tags.yml
+    output_mapping: {task-output: generate-docker-tags-output}
   - task: generate-github-release
     file: pipeline-tasks/generate-github-release/task.yml
     output_mapping: {task-output: generate-github-release-output}
@@ -62,18 +66,18 @@ jobs:
       commitish: generate-commitish-output/commitish
   - put: version
     params: {file: version/version}
-  - put: maven-resource-image-final
+  - put: maven-resource-image-final-debian
     params:
-      load: maven-resource-image-rc
-      dockerfile: maven-resource/Dockerfile
-      tag: generate-docker-tags-output/tag-alpine
-      tag_as_latest: true
-  - put: maven-resource-image-final
-    params:
-      load: maven-resource-image-rc
+      load: maven-resource-image-rc-debian
       dockerfile: maven-resource/debian/Dockerfile
       tag: generate-docker-tags-output/tag-debian
       tag_as_latest: false
+  - put: maven-resource-image-final-alpine
+    params:
+      load: maven-resource-image-rc-alpine
+      dockerfile: maven-resource/Dockerfile
+      tag: generate-docker-tags-output/tag-alpine
+      tag_as_latest: true
 
 - name: major
   public: true
@@ -140,14 +144,28 @@ resources:
     file: version
     private_key: {{git-private-key}}
 
-- name: maven-resource-image-rc
+- name: maven-resource-image-rc-alpine
   type: docker-image
   source:
     repository: {{docker-repository-rc}}
     username: {{docker-username}}
     password: {{docker-password}}
 
-- name: maven-resource-image-final
+- name: maven-resource-image-rc-debian
+  type: docker-image
+  source:
+    repository: {{docker-repository-rc}}
+    username: {{docker-username}}
+    password: {{docker-password}}
+
+- name: maven-resource-image-final-alpine
+  type: docker-image
+  source:
+    repository: {{docker-repository-final}}
+    username: {{docker-username}}
+    password: {{docker-password}}
+
+- name: maven-resource-image-final-debian
   type: docker-image
   source:
     repository: {{docker-repository-final}}
@@ -155,15 +173,8 @@ resources:
     password: {{docker-password}}
 
 - name: tracker
-  type: tracker-resource
+  type: tracker
   source:
     token: {{tracker-api-token}}
     project_id: {{tracker-project-id}}
     tracker_url: {{tracker-url}}
-
-resource_types:
-- name: tracker-resource
-  type: docker-image
-  source:
-    repository: concourse/tracker-resource
-    tag: latest
