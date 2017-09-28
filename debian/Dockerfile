@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk
+FROM openjdk:8u131-jdk
 
 RUN apt-get update && apt-get -y install jq libxml2-utils \
   && apt-get clean \
