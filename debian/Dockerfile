@@ -5,8 +5,8 @@ RUN apt-get update && apt-get -y install jq libxml2-utils \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ADD assets/ /opt/resource/
-ADD test/ /opt/resource-tests/
-ADD itest/ /opt/resource-itests/
+ADD test/ /opt/resource/test/
+ADD itest/ /opt/resource/itest/
 
 # Run tests (also pre-seeds .m2/repository)
-RUN /opt/resource-tests/all.sh
+RUN /opt/resource/test/all.sh
