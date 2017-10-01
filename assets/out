@@ -1,7 +1,8 @@
 #!/bin/bash
 # vim: set ft=sh
 
-set -e
+set -eu
+set -o pipefail
 
 exec 3>&1 # make stdout available as fd 3 for the result
 exec 1>&2 # redirect all output to stderr for logging
@@ -10,8 +11,7 @@ resource_dir=$(dirname $0)
 
 source $resource_dir/common.sh
 
-source=$1
-
+source=${1:-}
 if [ -z "$source" ]; then
   echo "usage: $0 <path/to/source>"
   exit 1
@@ -22,7 +22,9 @@ cd $source
 # for jq
 PATH=/usr/local/bin:$PATH
 
+TMPDIR=${TMPDIR:-/tmp}
 payload=$(mktemp $TMPDIR/maven-resource-request.XXXXXX)
+working=$TMPDIR/maven-resource-working && mkdir -p $working
 
 cat > $payload <&0
 
@@ -54,23 +56,23 @@ export MAVEN_OPTS=${paramsMavenOpts:-$sourceMavenOpts}
 export MAVEN_CONFIG=${paramsMavenConfig:-$sourceMavenConfig}
 export MAVEN_BASEDIR=$resource_dir
 
+# Use ours if user didn't specify
+[ -z "$MAVEN_CONFIG" ] && MAVEN_CONFIG="-s $resource_dir/.mvn/settings.xml"
+
 # groupId:artifactId:type[:classifier]
 groupId=$(get_group_id $artifact)
 artifactId=$(get_artifact_id $artifact)
 packaging=$(get_packaging $artifact)
 classifier=$(get_classifier $artifact)
 
-# Use ours if user didn't specify
-[ -z "$MAVEN_CONFIG" ] && MAVEN_CONFIG="-s $(dirname $0)/.mvn/settings.xml"
-
 # TODO: Add more error checking
-if [ -z "$release_url" ] && [ -z "$snapshot_url" ] ; then
-  echo "invalid payload (must specify url or snapshot_url)"
+if [ -z "$release_url" ] && [ -z "$snapshot_url" ]; then
+  echo "[ERROR] invalid payload (must specify url or snapshot_url)"
   exit 1
 fi
 
 if [ -z "$file" ]; then
-  echo "invalid payload (missing file)"
+  echo "[ERROR] invalid payload (missing file)"
   exit 1
 fi
 
@@ -84,29 +86,27 @@ if [ -f "$version_file" ]; then
 elif [ -f "$pom_file" ]; then
   version=$(printf 'POM_VERSION=${project.version}\n0\n' | $resource_dir/mvnw help:evaluate -f $pom_file | grep '^POM_VERSION' | cut -d = -f 2)
 else
-  echo "invalid payload (must specify version file or pom file)"
+  echo "[ERROR] invalid payload (must specify version file or pom file)"
   exit 1
 fi
 
 if [ "$skip_cert_check" = "true" ]; then
-  MAVEN_OPTS="-Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true -Dmaven.wagon.http.ssl.ignore.validity.dates=true"
+  MAVEN_OPTS="$MAVEN_OPTS -Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true -Dmaven.wagon.http.ssl.ignore.validity.dates=true"
 elif [ -n "$repository_cert" ]; then
-  mkdir $source/ssl
-  echo "$repository_cert" > $source/ssl/repository.crt
-  keytool -import -file $source/ssl/repository.crt -alias CAAlias -keystore $source/ssl/truststore.jks -storepass changeit -noprompt
-  MAVEN_OPTS="$MAVEN_OPTS -Djavax.net.ssl.trustStore=$source/ssl/truststore.jks \
-                          -Djavax.net.ssl.trustStorePassword=changeit"
+  mkdir -p $working/security
+  echo "$repository_cert" > $working/security/repository.crt
+  : "${JAVA_HOME:?[ERROR] JAVA_HOME not set or empty}"
+  cp  $JAVA_HOME/jre/lib/security/cacerts $working/security/.
+  keytool -noprompt -storepass changeit -keystore $working/security/cacerts -import -file $working/security/repository.crt -alias maven-resource-repository-CAAlias
+  MAVEN_OPTS="$MAVEN_OPTS -Djavax.net.ssl.trustStore=$working/security/cacerts -Djavax.net.ssl.trustStorePassword=changeit"
 fi
 
 # test for 1.0.0-SNAPSHOT and for 1.0.0-20170328.031519-19
-[[ "$version" = *-SNAPSHOT ]] && isSnapshot=true
-echo "$version" | grep -oEq "[0-9]{8}\.[0-9]{6}-[0-9]{1,}" && isSnapshot=true
+isSnapshot=false
+[[ "$version" = *-SNAPSHOT ]] || echo "$version" | grep -oEq "[0-9]{8}\.[0-9]{6}-[0-9]{1,}" && isSnapshot=true
 
-if [ -n "$snapshot_url" ] && [ "$isSnapshot" = true ]; then
-  url=$snapshot_url
-else
-  url=$release_url
-fi
+url=$release_url
+[ -n "$snapshot_url" ] && [ "$isSnapshot" = true ] && url=$snapshot_url
 
 if [ "$disable_redeploy" = "true" ] && [ "$isSnapshot" != true ]; then
   foundVersions=$(jq -n \
@@ -135,7 +135,7 @@ if [ "$disable_redeploy" = "true" ] && [ "$isSnapshot" != true ]; then
 
   for foundVersion in $foundVersions; do
     if [ "$version" = "$foundVersion" ]; then
-      echo "WARNING: disable_redeploy enabled: Found existing version $version in repository $release_url. Skipping deploy!"
+      echo "[WARNING] disable_redeploy enabled: Found existing version $version in repository $release_url. Skipping deploy!"
       jq -n \
       --arg version "$version" \
       '{

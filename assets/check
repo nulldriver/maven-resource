@@ -1,18 +1,22 @@
 #!/bin/bash
 # vim: set ft=sh
 
-set -e
+set -eu
+set -o pipefail
 
 exec 3>&1 # make stdout available as fd 3 for the result
 exec 1>&2 # redirect all output to stderr for logging
 
-source $(dirname $0)/common.sh
+resource_dir=$(dirname $0)
+
+source $resource_dir/common.sh
 
 # for jq
 PATH=/usr/local/bin:$PATH
 
+TMPDIR=${TMPDIR:-/tmp}
 payload=$(mktemp $TMPDIR/maven-resource-request.XXXXXX)
-working=$TMPDIR/maven-resource-working
+working=$TMPDIR/maven-resource-working && mkdir -p $working
 
 cat > $payload <&0
 
@@ -42,17 +46,15 @@ artifactId=$(get_artifact_id $artifact)
 packaging=$(get_packaging $artifact)
 
 auth=""
-if [ -n "$username" ]; then
-  auth="--user $username:$password"
-fi
+[ -n "$username" ] && auth="--user $username:$password"
 
 cert=""
 if [ "$skip_cert_check" = "true" ]; then
   cert="-k"
 elif [ -n "$repository_cert" ]; then
-  mkdir -p $working/ssl
-  echo "$repository_cert" > $working/ssl/repository.crt
-  cert="--cacert $working/ssl/repository.crt"
+  mkdir -p $working/security
+  echo "$repository_cert" > $working/security/repository.crt
+  cert="--cacert $working/security/repository.crt"
 fi
 
 # convert 1.0.0-20170328.031519-19 to 1.0.0-SNAPSHOT
@@ -63,9 +65,7 @@ fi
 
 url=$release_url
 if [[ "$version" = *-SNAPSHOT ]]; then
-  if [ -n "$snapshot_url" ]; then
-    url=$snapshot_url
-  fi
+  [ -n "$snapshot_url" ] && url=$snapshot_url
   metadataUrl="$url/${groupId//.//}/$artifactId/$version/maven-metadata.xml"
 else
   metadataUrl="$url/${groupId//.//}/$artifactId/maven-metadata.xml"
