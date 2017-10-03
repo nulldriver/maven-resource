@@ -12,7 +12,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Generate release notes from CHANGELOG.me for github release (pipeline.yml).
 
 ### Changed
-- Updated examples in README to better show `cf push` with filename glob.
+- Updated examples to better show `cf push` with filename glob (README.md).
+- Move `apt-get clean` and tmp folder deletion to `apt-get install` block (Dockerfile).
+- Pin parent docker image version `openjdk:8u131-jdk-alpine` (Dockerfile) and `openjdk:8u131-jdk` (debian/Dockerfile).
+- Use Maven 3.5.0 (maven-wrapper.properties).
+- Move test & itest folders into /opt/resource folder in image to facilitate easier itest runs while in a running container (Dockerfile, debian/Dockerfile).
+-
+
+### Fixed
+- `check` operation no longer silently fails on ssl cert errors.
+- `get` and `put` scripts now use the existing java keystore as a base for adding custom ssl certs.
 
 ## 1.3.2 - 2017-05-22
 
