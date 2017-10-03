@@ -59,11 +59,16 @@ jobs:
   - task: generate-commitish
     file: pipeline-tasks/generate-commitish/task.yml
     output_mapping: {task-output: generate-commitish-output}
+  - task: generate-release-notes
+    file: pipeline-tasks/generate-release-notes-from-changelog/task.yml
+    input-mapping: {task-input: project}
+    output-mapping: {task-output: generate-release-notes-output}
   - put: github-release
     params:
       name: generate-github-release-output/release-name
       tag: generate-github-release-output/release-tag
       commitish: generate-commitish-output/commitish
+      body: generate-release-notes-output/RELEASE_NOTES.md
   - put: version
     params: {file: version/version}
   - put: maven-resource-image-final-debian

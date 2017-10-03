@@ -35,34 +35,6 @@ Deploys and retrieve artifacts from a Maven Repository Manager.
     ```
 
 
-### Example
-
-Resource configuration for an authenticated repository:
-
-``` yaml
-resource_types:
-- name: maven-resource
-  type: docker-image
-  source:
-    repository: pivotalpa/maven-resource
-    tag: latest
-
-resources:
-- name: milestone
-  type: maven-resource
-  source:
-    url: https://myrepo.com/repository/milestones
-    artifact: com.example:example-webapp:jar
-    username: myuser
-    password: mypass
-    repository_cert: |
-      -----BEGIN CERTIFICATE-----
-      MIIEowIBAAKCAQEAtCS10/f7W7lkQaSgD/mVeaSOvSF9ql4hf/zfMwfVGgHWjj+W
-      <Lots more text>
-      DWiJL+OFeg9kawcUL6hQ8JeXPhlImG6RTUffma9+iGQyyBMCGd1l
-      -----END CERTIFICATE-----
-```
-
 ## Behavior
 
 ### `check`: Check for new versions of the artifact.
@@ -90,7 +62,34 @@ Deploy the artifact to the Maven Repository Manager.
 
 ## Examples
 
-Deploying an artifact built by Maven:
+Resource configuration for an authenticated repository using a custom cert:
+
+``` yaml
+resource_types:
+- name: maven-resource
+  type: docker-image
+  source:
+    repository: pivotalpa/maven-resource
+    tag: latest
+
+resources:
+- name: artifact
+  type: maven-resource
+  source:
+    url: https://myrepo.example.com/repository/maven-releases/
+    snapshot_url: https://myrepo.example.com/repository/maven-snapshots/
+    artifact: com.example:example-webapp:jar
+    username: myuser
+    password: mypass
+    repository_cert: |
+      -----BEGIN CERTIFICATE-----
+      MIIEowIBAAKCAQEAtCS10/f7W7lkQaSgD/mVeaSOvSF9ql4hf/zfMwfVGgHWjj+W
+      <Lots more text>
+      DWiJL+OFeg9kawcUL6hQ8JeXPhlImG6RTUffma9+iGQyyBMCGd1l
+      -----END CERTIFICATE-----
+```
+
+Build and deploy an artifact to a Maven Repository Manager:
 
 ``` yaml
 jobs:
@@ -98,38 +97,25 @@ jobs:
   plan:
   - get: source-code
     trigger: true
-  - get: version
-    params: { pre: rc }
-  - task: build
+  - task: build-artifact
     file: source-code/ci/build.yml
-  - put: milestone
+  - put: artifact
     params:
-      file: build-output/myartifact-*.jar
+      file: task-output/example-webapp-*.jar
       pom_file: source-code/pom.xml
-      version_file: version/number
-  - put: version
-    params: { file: version/number }
 ```
 
-Retrieve a _milestone_ artifact, push to Cloud Foundry and run integration tests:
+Retrieve an artifact and push to Cloud Foundry using [cf-resource](https://github.com/concourse/cf-resource)
 
 ``` yaml
-- name: test
+jobs:
+- name: deploy
   plan:
-  - get: milestone
-    trigger: true
-    passed: [ build ]
   - get: source-code
-    passed: [ build ]
-  - get: version
-    passed: [ build ]
-  - task: prepare-cf
-    file: source-code/ci/prepare-cf.yml
+  - get: artifact
+    trigger: true
   - put: cf
     params:
-      manifest: prepare-cf-output/manifest.yml
-  - task: integration
-    file: source-code/ci/integration-test.yml
-    params:
-      API_ENDPOINT: https://myapp.cfapps.io/
+      manifest: source-code/manifest.yml
+      path: artifact/example-webapp-*.jar
 ```
