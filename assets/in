@@ -86,7 +86,7 @@ fi
 
 # test for 1.0.0-SNAPSHOT and for 1.0.0-20170328.031519-19
 isSnapshot=false
-[[ "$version" = *-SNAPSHOT ]] && echo "$version" | grep -oEq "[0-9]{8}\.[0-9]{6}-[0-9]{1,}" && isSnapshot=true
+[[ "$version" = *-SNAPSHOT ]] || echo "$version" | grep -oEq "[0-9]{8}\.[0-9]{6}-[0-9]{1,}" && isSnapshot=true
 
 url=$release_url
 [ -n "$snapshot_url" ] && [ "$isSnapshot" = true ] && url=$snapshot_url
