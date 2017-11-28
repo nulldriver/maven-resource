@@ -34,6 +34,7 @@ fi
 release_url=$(jq -r '.source.url //empty' < $payload)
 snapshot_url=$(jq -r '.source.snapshot_url //empty' < $payload)
 artifact=$(jq -r '.source.artifact //empty' < $payload)
+artifactItems=$(jq -r '.params.artifactItems //empty' < $payload)
 version=$(jq -r '.version.version //empty' < $payload)
 username=$(jq -r '.source.username //empty' < $payload)
 password=$(jq -r '.source.password //empty' < $payload)
@@ -92,14 +93,25 @@ url=$release_url
 [ -n "$snapshot_url" ] && [ "$isSnapshot" = true ] && url=$snapshot_url
 
 args=
-args="$args -Dartifact=$artifactItem"
 args="$args -DoutputDirectory=$destination"
 args="$args -Drepository.url=$url"
 
 [ -n "$username" ] && args="$args -Drepository.username=$username";
 [ -n "$password" ] && args="$args -Drepository.password=$password";
 
-$resource_dir/mvnw dependency:copy $args
+$resource_dir/mvnw dependency:copy "$args -Dartifact=$artifactItem"
+
+# Deconstruct map of 'classifier: type' objects, and download
+# corresponding maven repo objects using 'groupId:artifactId' and 'args'
+# from the "primary" artifact
+if [ -n "$artifactItems" ]; then
+  for classifier in $( jq -r 'keys[]' <<< $artifactItems ); do
+    packaging=$(jq -r ".[\"$classifier\"]" <<< $artifactItems)
+    artifactExtra="$groupId:$artifactId:$version:$packaging:$classifier"
+    $resource_dir/mvnw dependency:copy "$args -Dartifact=$artifactExtra"
+  done
+fi
+
 
 jq -n \
 --arg version "$version" \

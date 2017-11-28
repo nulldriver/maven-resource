@@ -1,3 +1,5 @@
+function join { local IFS="$1"; shift; echo "$*"; }
+
 get_group_id() {
   echo $1 | cut -d ":" -f 1
 }

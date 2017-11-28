@@ -81,6 +81,19 @@ fi
 file=$(ls $file)
 pom_file=$(ls $pom_file)
 
+files=''
+classifiers=''
+types=''
+artifactItems=$( jq -r '.params.files //empty' < $payload )
+if [ -n "$artifactItems" ]; then
+  for classifier_key in $(jq -r 'keys[]' <<< $artifactItems); do
+    classifiers=$(join , $classifiers $classifier_key)
+    curr_file=$(jq -r ".[\"$classifier_key\"]" <<< $artifactItems )
+    files=$(join , $files $curr_file)
+    types=$(join , $types ${curr_file##*.})
+  done
+fi;
+
 if [ -f "$version_file" ]; then
   version=$(cat $version_file)
 elif [ -f "$pom_file" ]; then
@@ -158,6 +171,10 @@ args="$args -Dpackaging=$packaging"
 [ -n "$classifier" ] && args="$args -Dclassifier=$classifier"
 [ -n "$username" ]   && args="$args -Drepository.username=$username";
 [ -n "$password" ]   && args="$args -Drepository.password=$password";
+
+[ -n "$files" ]   && args="$args -Dfiles=$files";
+[ -n "$classifiers" ]   && args="$args -Dclassifiers=$classifiers";
+[ -n "$types" ]   && args="$args -Dtypes=$types";
 
 $resource_dir/mvnw deploy:deploy-file $args
 
