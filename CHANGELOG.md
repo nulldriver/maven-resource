@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 1.3.5 - 2018-03-20
+### Fixed
+- Interacting with an SSL protected Maven Repository Manager broke with Concourse 3.9.0. The way Concourse now mounts the worker's certificate directory to `/etc/ssl/certs` clobbers the `/etc/ssl/certs/java/cacerts` file placed there by the base [openjdk](https://hub.docker.com/_/openjdk/) image, which is symlinked to at `$JAVA_HOME/jre/lib/security/cacerts`, which of course is needed by Java for SSL stuff.
+
+  So... as a workaround we unlink the link and copy the file directly to `$JAVA_HOME/jre/lib/security/cacerts`. Thx to [@elgohr](https://github.com/elgohr) for working with me on this!
+
+### Changed
+- Bumped base [openjdk](https://hub.docker.com/_/openjdk/) image to version `8u151` (from `8u131`).
+
 ## 1.3.4 - 2017-10-03
 ### Fixed
 - v1.3.3 introduced [Incorrect SNAPSHOT version checking logic](https://github.com/patrickcrocker/maven-resource/issues/12) for the `check` operation for snapshots but was quickly spotted by [@shinmyung0](https://github.com/shinmyung0). This is now fixed and the 1.3.3 release has been yanked!
