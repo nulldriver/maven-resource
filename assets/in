@@ -79,7 +79,9 @@ elif [ -n "$repository_cert" ]; then
   mkdir -p $working/security
   echo "$repository_cert" > $working/security/repository.crt
   : "${JAVA_HOME:?[ERROR] JAVA_HOME not set or empty}"
-  cp  $JAVA_HOME/jre/lib/security/cacerts $working/security/.
+  if [ -d "$JAVA_HOME/jre/lib/security/cacerts" ]
+    then cp $JAVA_HOME/jre/lib/security/cacerts $working/security/.
+  fi
   keytool -noprompt -storepass changeit -keystore $working/security/cacerts -import -file $working/security/repository.crt -alias maven-resource-repository-CAAlias
   MAVEN_OPTS="$MAVEN_OPTS -Djavax.net.ssl.trustStore=$working/security/cacerts -Djavax.net.ssl.trustStorePassword=changeit"
 fi
