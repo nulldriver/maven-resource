@@ -1,6 +1,6 @@
 # Maven Resource
 
-[![CI Build](https://wings.concourse-ci.org/api/v1/teams/sme-pcf-concourse/pipelines/maven-resource/jobs/build/badge)](https://wings.concourse-ci.org/teams/sme-pcf-concourse/pipelines/maven-resource)
+[![CI Build](https://wings.pivotal.io/api/v1/teams/sme-pcf-concourse/pipelines/maven-resource/jobs/build/badge)](https://wings.pivotal.io/teams/sme-pcf-concourse/pipelines/maven-resource)
 [![Docker Pulls](https://img.shields.io/docker/pulls/pivotalpa/maven-resource.svg)](https://hub.docker.com/r/pivotalpa/maven-resource/)
 
 Deploys and retrieve artifacts from a Maven Repository Manager.
