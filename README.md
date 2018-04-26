@@ -1,7 +1,7 @@
 # Maven Resource
 
-[![CI Build](https://wings.pivotal.io/api/v1/teams/sme-pcf-concourse/pipelines/maven-resource/jobs/build/badge)](https://wings.pivotal.io/teams/sme-pcf-concourse/pipelines/maven-resource)
-[![Docker Pulls](https://img.shields.io/docker/pulls/pivotalpa/maven-resource.svg)](https://hub.docker.com/r/pivotalpa/maven-resource/)
+[![CI Build](https://ci.nulldriver.com/api/v1/teams/resources/pipelines/maven-resource/jobs/build/badge)](https://ci.nulldriver.com/teams/resources/pipelines/maven-resource)
+[![Docker Pulls](https://img.shields.io/docker/pulls/nulldriver/maven-resource.svg)](https://hub.docker.com/r/nulldriver/maven-resource/)
 
 Deploys and retrieve artifacts from a Maven Repository Manager.
 
@@ -69,7 +69,7 @@ resource_types:
 - name: maven-resource
   type: docker-image
   source:
-    repository: pivotalpa/maven-resource
+    repository: nulldriver/maven-resource
     tag: latest
 
 resources:
