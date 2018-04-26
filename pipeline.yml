@@ -27,10 +27,6 @@ jobs:
       dockerfile: project/Dockerfile
       tag: generate-docker-tags-output/tag-alpine
       tag_as_latest: false
-  - put: tracker
-    params:
-      repos:
-        - maven-resource
 
 - name: shipit
   public: true
@@ -117,9 +113,9 @@ resources:
 - name: maven-resource
   type: git
   source:
-    uri: {{maven-resource-git-uri}}
-    branch: {{maven-resource-git-branch}}
-    private_key: {{git-private-key}}
+    uri: {{git-uri}}
+    branch: {{git-branch}}
+    private_key: ((git_key.private_key))
     ignore_paths:
     - LICENSE
     - NOTICE.md
@@ -129,7 +125,7 @@ resources:
 - name: github-release
   type: github-release
   source:
-    access_token: {{github-release-access-token}}
+    access_token: ((github_access_token))
     repository: maven-resource
     user: {{github-release-user}}
 
@@ -144,42 +140,35 @@ resources:
   source:
     driver: git
     initial_version: 1.0.0-rc.0
-    uri: {{maven-resource-semver-git-uri}}
-    branch: {{maven-resource-semver-git-branch}}
+    uri: {{git-uri-semver}}
+    branch: version
     file: version
-    private_key: {{git-private-key}}
+    private_key: ((git_key.private_key))
 
 - name: maven-resource-image-rc-alpine
   type: docker-image
   source:
     repository: {{docker-repository-rc}}
-    username: {{docker-username}}
-    password: {{docker-password}}
+    username: ((docker.username))
+    password: ((docker.password))
 
 - name: maven-resource-image-rc-debian
   type: docker-image
   source:
     repository: {{docker-repository-rc}}
-    username: {{docker-username}}
-    password: {{docker-password}}
+    username: ((docker.username))
+    password: ((docker.password))
 
 - name: maven-resource-image-final-alpine
   type: docker-image
   source:
     repository: {{docker-repository-final}}
-    username: {{docker-username}}
-    password: {{docker-password}}
+    username: ((docker.username))
+    password: ((docker.password))
 
 - name: maven-resource-image-final-debian
   type: docker-image
   source:
     repository: {{docker-repository-final}}
-    username: {{docker-username}}
-    password: {{docker-password}}
-
-- name: tracker
-  type: tracker
-  source:
-    token: {{tracker-api-token}}
-    project_id: {{tracker-project-id}}
-    tracker_url: {{tracker-url}}
+    username: ((docker.username))
+    password: ((docker.password))
