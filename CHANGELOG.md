@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+### Changed
+- No longer creating 'debian' variant
+- CI/CD pipeline now tests the created image
+
 ## 1.3.5 - 2018-03-20
 ### Fixed
 - Interacting with an SSL protected Maven Repository Manager broke with Concourse 3.9.0. The way Concourse now mounts the worker's certificate directory to `/etc/ssl/certs` clobbers the `/etc/ssl/certs/java/cacerts` file placed there by the base [openjdk](https://hub.docker.com/_/openjdk/) image, which is symlinked to at `$JAVA_HOME/jre/lib/security/cacerts`, which of course is needed by Java for SSL stuff.

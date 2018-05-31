@@ -5,50 +5,65 @@ jobs:
   serial_groups: [version]
   plan:
   - aggregate:
-    - get: project
-      resource: maven-resource
+    - get: maven-resource
       trigger: true
     - get: version
       params: {pre: rc}
-  - task: generate-docker-tags
-    file: project/ci/generate-docker-tags.yml
-    output_mapping: {task-output: generate-docker-tags-output}
   - put: version
     params: {file: version/version}
-  - put: maven-resource-image-rc-debian
+  - put: maven-resource-image-rc
     params:
       build: project
-      dockerfile: project/debian/Dockerfile
-      tag: generate-docker-tags-output/tag-debian
+      tag: version/version
       tag_as_latest: false
-  - put: maven-resource-image-rc-alpine
-    params:
-      build: project
-      dockerfile: project/Dockerfile
-      tag: generate-docker-tags-output/tag-alpine
-      tag_as_latest: false
+
+- name: test
+  public: true
+  serial_groups: [version]
+  plan:
+  - aggregate:
+    - get: project
+      resource: maven-resource
+      passed: [build]
+    - get: maven-resource-image-rc
+      trigger: true
+      passed: [build]
+    - get: version
+      passed: [build]
+    - task: test
+      image: maven-resource-image-rc
+      config:
+        platform: linux
+        params:
+          MVN_REPO_URL: {{repo-url}}
+          MVN_SNAPSHOT_URL: {{repo-snapshot-url}}
+          MVN_USERNAME: ((mvn.username))
+          MVN_PASSWORD: ((mvn.password))
+          MVN_SKIP_CERT_CHECK: {{repo-skip-cert-check}}
+          MVN_REPO_CERT: {{repo-cert}}
+          MVN_DISABLE_REDEPLOY: {{repo-disable-redeploy}}
+        run:
+          path: sh
+          args:
+          - -exc
+          - |
+            /opt/itest/all.sh
 
 - name: shipit
   public: true
   serial_groups: [version]
   plan:
   - aggregate:
-    - get: pipeline-tasks
     - get: project
       resource: maven-resource
-      passed: [build]
-    - get: maven-resource-image-rc-alpine
-      passed: [build]
-      params: {save: true}
-    - get: maven-resource-image-rc-debian
-      passed: [build]
+      passed: [test]
+    - get: maven-resource-image-rc
+      passed: [test]
       params: {save: true}
     - get: version
-      passed: [build]
+      passed: [test]
       params: {bump: final}
-  - task: generate-docker-tags
-    file: project/ci/generate-docker-tags.yml
-    output_mapping: {task-output: generate-docker-tags-output}
+    - get: pipeline-tasks
   - task: generate-github-release
     file: pipeline-tasks/generate-github-release/task.yml
     output_mapping: {task-output: generate-github-release-output}
@@ -67,17 +82,10 @@ jobs:
       body: generate-release-notes-output/RELEASE_NOTES.md
   - put: version
     params: {file: version/version}
-  - put: maven-resource-image-final-debian
+  - put: maven-resource-image-final
     params:
-      load: maven-resource-image-rc-debian
-      dockerfile: maven-resource/debian/Dockerfile
-      tag: generate-docker-tags-output/tag-debian
-      tag_as_latest: false
-  - put: maven-resource-image-final-alpine
-    params:
-      load: maven-resource-image-rc-alpine
-      dockerfile: maven-resource/Dockerfile
-      tag: generate-docker-tags-output/tag-alpine
+      load: maven-resource-image-rc
+      tag: version/version
       tag_as_latest: true
 
 - name: major
@@ -122,19 +130,6 @@ resources:
     - pipeline.yml
     - README.md
 
-- name: github-release
-  type: github-release
-  source:
-    access_token: ((github_access_token))
-    repository: maven-resource
-    user: {{github-release-user}}
-
-- name: pipeline-tasks
-  type: git
-  source:
-    uri: {{pipeline-tasks-git-uri}}
-    branch: {{pipeline-tasks-git-branch}}
-
 - name: version
   type: semver
   source:
@@ -145,30 +140,29 @@ resources:
     file: version
     private_key: ((git_key.private_key))
 
-- name: maven-resource-image-rc-alpine
+- name: maven-resource-image-rc
   type: docker-image
   source:
     repository: {{docker-repository-rc}}
     username: ((docker.username))
     password: ((docker.password))
 
-- name: maven-resource-image-rc-debian
-  type: docker-image
-  source:
-    repository: {{docker-repository-rc}}
-    username: ((docker.username))
-    password: ((docker.password))
-
-- name: maven-resource-image-final-alpine
+- name: maven-resource-image-final
   type: docker-image
   source:
     repository: {{docker-repository-final}}
     username: ((docker.username))
     password: ((docker.password))
 
-- name: maven-resource-image-final-debian
-  type: docker-image
+- name: pipeline-tasks
+  type: git
   source:
-    repository: {{docker-repository-final}}
-    username: ((docker.username))
-    password: ((docker.password))
+    uri: {{pipeline-tasks-git-uri}}
+    branch: {{pipeline-tasks-git-branch}}
+
+- name: github-release
+  type: github-release
+  source:
+    owner: {{github-release-user}}
+    repository: maven-resource
+    access_token: ((github_access_token))

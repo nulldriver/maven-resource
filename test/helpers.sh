@@ -1,18 +1,25 @@
 #!/bin/bash
 
-set -e -u
-
+set -eu
 set -o pipefail
 
 export TMPDIR_ROOT=$(mktemp -d /tmp/mvn-tests.XXXXXX)
-trap "rm -rf $TMPDIR_ROOT" EXIT
 
-test_dir=$(dirname $0)
+on_exit() {
+  exitcode=$?
+  if [ $exitcode != 0 ] ; then
+    printf '\e[41;33;1mFailure encountered!\e[0m\n'
+  fi
+  rm -rf $TMPDIR_ROOT
+}
 
-if [ -d /opt/resource ]; then
-  export resource_dir=/opt/resource
+trap on_exit EXIT
+
+base_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+if [ -d "$base_dir/assets" ]; then
+  resource_dir=$base_dir/assets
 else
-  export resource_dir=$(cd $(dirname $0)/../assets && pwd)
+  resource_dir=/opt/resource
 fi
 
 source $resource_dir/common.sh
@@ -20,7 +27,8 @@ source $resource_dir/common.sh
 run() {
   export TMPDIR=$(mktemp -d ${TMPDIR_ROOT}/mvn-tests.XXXXXX)
 
-  echo -e 'running \e[33m'"$@"$'\e[0m...'
+  # convert multiple args to single arg so printf doesn't output multiple lines
+  printf "running \e[33m%s\e[0m...\n" "$(echo "$@")"
   eval "$@" 2>&1 | sed -e 's/^/  /g'
   echo ""
 }
@@ -232,9 +240,9 @@ deploy_without_pom_without_credentials() {
   # Mock the pom.xml
   local pom=build-output/pom.xml
   if [[ "$version" = *-SNAPSHOT ]]; then
-    cp $test_dir/resources/pom-release.xml $src/$pom
+    cp $base_dir/test/resources/pom-release.xml $src/$pom
   else
-    cp $test_dir/resources/pom-snapshot.xml $src/$pom
+    cp $base_dir/test/resources/pom-snapshot.xml $src/$pom
   fi
 
   jq -n \
