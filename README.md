@@ -11,5 +11,5 @@ rm .gitignore .gitmodules
 touch README.md
 git add .
 git commit -m "new branch"
-git push origin version
+git push origin dev-version
 ```
