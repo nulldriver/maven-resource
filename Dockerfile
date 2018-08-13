@@ -1,6 +1,8 @@
 FROM openjdk:8u151-jdk-alpine
 
-RUN apk add --no-cache curl tar bash jq libxml2-utils
+RUN apk add --no-cache curl tar bash jq
+  libxml2-utils \ # <-- xmllint
+  util-linux      # <-- uuidgen
 
 # https://github.com/concourse/concourse/issues/2042
 RUN unlink  $JAVA_HOME/jre/lib/security/cacerts && \
