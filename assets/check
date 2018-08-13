@@ -8,94 +8,58 @@ exec 3>&1 # make stdout available as fd 3 for the result
 exec 1>&2 # redirect all output to stderr for logging
 
 resource_dir=$(dirname $0)
-
-source $resource_dir/common.sh
+source "$resource_dir/common.sh"
 
 # for jq
 PATH=/usr/local/bin:$PATH
 
-TMPDIR=${TMPDIR:-/tmp}
-payload=$(mktemp $TMPDIR/maven-resource-request.XXXXXX)
-working=$TMPDIR/maven-resource-working && mkdir -p $working
+payload=$TMPDIR/maven-resource-request
 
 cat > $payload <&0
 
-debug=$(jq -r '.source.debug //empty' < $payload)
+debug=$(jq -r '.source.debug // empty' < $payload)
 if [ "$debug" = "true" ]; then
   set -x
 fi
 
-release_url=$(jq -r '.source.url //empty' < $payload)
-snapshot_url=$(jq -r '.source.snapshot_url //empty' < $payload)
-artifact=$(jq -r '.source.artifact //empty' < $payload)
-version=$(jq -r '.version.version //empty' < $payload)
-username=$(jq -r '.source.username //empty' < $payload)
-password=$(jq -r '.source.password //empty' < $payload)
-skip_cert_check=$(jq -r '.source.skip_cert_check //empty' < $payload)
-repository_cert=$(jq -r '.source.repository_cert //empty' < $payload)
+artifact=$(jq -r '.source.artifact // empty' < $payload)
+url=$(jq -r '.source.url // empty' < $payload)
+username=$(jq -r '.source.username // empty' < $payload)
+password=$(jq -r '.source.password // empty' < $payload)
 
-# TODO: Add more error checking
-if [ -z "$release_url" ] && [ -z "$snapshot_url" ] ; then
-  echo "[ERROR] invalid payload (must specify url or snapshot_url)"
-  exit 1
-fi
+version=$(jq -r '.version.version // 0' < $payload)
 
-# groupId:artifactId:type[:classifier]
+# error checking
+[ -z "$artifact" ] && error_and_exit 'invalid payload (must specify artifact)'
+[ -z "$url" ] && error_and_exit 'invalid payload (must specify url)'
+
 groupId=$(get_group_id $artifact)
 artifactId=$(get_artifact_id $artifact)
-packaging=$(get_packaging $artifact)
 
-auth=""
-[ -n "$username" ] && auth="--user $username:$password"
+export MAVEN_BASEDIR=$resource_dir
+"$resource_dir/mvnw" versions:display-dependency-updates \
+  -f "$resource_dir/.mvn/pom-template.xml" \
+  -s "$resource_dir/.mvn/settings.xml" \
+  -Drepository.url="$url" \
+  -Drepository.username="$username" \
+  -Drepository.password="$password" \
+  -Dtemplate.groupId="$groupId" \
+  -Dtemplate.artifactId="$artifactId" \
+  -Dtemplate.type="$(get_packaging $artifact)" \
+  -Dtemplate.version="$version" \
+  -DserverId=maven-resource \
+  -DallowSnapshots=true
 
-cert=""
-if [ "$skip_cert_check" = "true" ]; then
-  cert="-k"
-elif [ -n "$repository_cert" ]; then
-  mkdir -p $working/security
-  echo "$repository_cert" > $working/security/repository.crt
-  cert="--cacert $working/security/repository.crt"
+metadata_file=~/.m2/repository/${groupId//.//}/${artifactId}/maven-metadata-maven-resource.xml
+
+# return empty array if no artifact found
+if [ ! -f "$metadata_file" ]; then
+  echo "[]" >&3
+  exit 0
 fi
 
-# convert 1.0.0-20170328.031519-19 to 1.0.0-SNAPSHOT
-uniqueVersion=$(echo "$version" | grep -oE "[0-9]{8}\.[0-9]{6}-[0-9]{1,}" || true)
-if [ -n "$uniqueVersion" ]; then
-  version=$(echo ${version%-$uniqueVersion}-SNAPSHOT)
-fi
+metadata=$(cat "$metadata_file")
 
-url=$release_url
-if [[ "$version" = *-SNAPSHOT ]]; then
-  [ -n "$snapshot_url" ] && url=$snapshot_url
-  metadataUrl="$url/${groupId//.//}/$artifactId/$version/maven-metadata.xml"
-else
-  metadataUrl="$url/${groupId//.//}/$artifactId/maven-metadata.xml"
-fi
+echo "$metadata"
 
-metadata=$(curl --fail --silent --show-error $cert $auth $metadataUrl)
-if [ $? -ne 0 ]; then
-  echo "[ERROR] failed to download maven-metadata.xml from: $metadataUrl"
-  exit 2
-fi
-
-declare -a versions=( )
-if [[ "$version" = *-SNAPSHOT ]]; then
-  versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/snapshotVersions/snapshotVersion[extension='$packaging']/value/text()" - 2>/dev/null)
-elif [ "$version" = "latest" ] || [ -z "$version" ]; then
-  versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/versions/version[last()]/text()" - 2>/dev/null)
-else
-  itemsCount=$(echo $metadata | xmllint --xpath 'count(/metadata/versioning/versions/version)' - 2>/dev/null)
-  found=false
-  for (( i=1; i <= $itemsCount; i++ )); do
-
-    current=$(echo $metadata | xmllint --xpath "/metadata/versioning/versions/version[$i]/text()" - 2>/dev/null)
-    if [ "$found" = false ] && [ "$current" = "$version" ]; then
-      found=true
-    fi
-
-    if [ "$found" = true ]; then
-      versions[$i]=$current
-    fi
-  done
-fi
-
-printf "%s\n" "${versions[@]}" | sed 's/.*/{ "version": "&" }/' | jq --slurp . >&3
+echo "not implemented yet!" >&3
