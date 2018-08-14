@@ -59,10 +59,12 @@ gen_artifact_id() {
   uuidgen
 }
 
-get_a_snapshot_and_return_the_unique_version() {
+check_a_snapshot_and_return_the_unique_version() {
+
+  local artifact=$1
 
   jq -n \
-  --arg artifact "com.example:$(gen_artifact_id):jar" \
+  --arg artifact "$artifact" \
   --arg url "$MVN_REPO_URL" \
   --arg username "$MVN_REPO_USERNAME" \
   --arg password "$MVN_REPO_PASSWORD" \
@@ -78,6 +80,8 @@ get_a_snapshot_and_return_the_unique_version() {
 
 put_a_snapshot_and_return_the_unique_version() {
 
+  local artifact=$1
+
   local job_dir=$(mktemp -d $TMPDIR/out-src.XXXXXX)
 
   mkdir -p "$job_dir/artifact"
@@ -89,7 +93,7 @@ put_a_snapshot_and_return_the_unique_version() {
   jq -n \
   --arg file "artifact/project-*.jar" \
   --arg version "version/version" \
-  --arg artifact "com.example:$(gen_artifact_id):jar" \
+  --arg artifact "$artifact" \
   --arg url "$MVN_REPO_URL" \
   --arg username "$MVN_REPO_USERNAME" \
   --arg password "$MVN_REPO_PASSWORD" \
