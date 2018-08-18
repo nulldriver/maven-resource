@@ -1,6 +1,6 @@
 FROM openjdk:8u151-jdk-alpine
 
-RUN apk add --no-cache curl tar bash jq
+RUN apk add --no-cache curl tar bash jq \
   libxml2-utils \ # <-- xmllint
   util-linux      # <-- uuidgen
 
