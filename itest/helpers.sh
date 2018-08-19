@@ -31,6 +31,16 @@ run() {
   echo ""
 }
 
+init_integration_tests() {
+  if [ ! -f "$base_dir/test/fixtures/project/target/project-1.0.0.jar" ]; then
+    pushd $base_dir/test/fixtures/project >/dev/null
+    {
+      ./mvnw package
+    } >/dev/stderr
+    popd >/dev/null
+  fi
+}
+
 assert_equals() {
   local expected=$1
   local actual=$2

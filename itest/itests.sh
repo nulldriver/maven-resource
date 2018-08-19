@@ -36,5 +36,6 @@ it_can_return_current_version_if_no_version_requested() {
   '
 }
 
+init_integration_tests
 run it_can_return_an_empty_list_if_no_versions_available
 run it_can_return_current_version_if_no_version_requested
