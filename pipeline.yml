@@ -36,18 +36,14 @@ jobs:
       platform: linux
       params:
         MVN_REPO_URL: {{repo-url}}
-        MVN_SNAPSHOT_URL: {{repo-snapshot-url}}
-        MVN_USERNAME: ((mvn.username))
-        MVN_PASSWORD: ((mvn.password))
-        MVN_SKIP_CERT_CHECK: {{repo-skip-cert-check}}
-        MVN_REPO_CERT: {{repo-cert}}
-        MVN_DISABLE_REDEPLOY: {{repo-disable-redeploy}}
+        MVN_REPO_USERNAME: ((mvn.username))
+        MVN_REPO_PASSWORD: ((mvn.password))
       run:
         path: sh
         args:
         - -exc
         - |
-          /opt/resource/itest/all.sh
+          /opt/resource/itest/itests.sh
 
 - name: shipit
   public: true
@@ -121,8 +117,8 @@ resources:
 - name: maven-resource
   type: git
   source:
-    uri: {{git-uri}}
-    branch: {{git-branch}}
+    uri: {{git-source-uri}}
+    branch: {{git-source-branch}}
     private_key: ((git_key.private_key))
     ignore_paths:
     - LICENSE
@@ -135,8 +131,8 @@ resources:
   source:
     driver: git
     initial_version: 1.0.0-rc.0
-    uri: {{git-uri-semver}}
-    branch: version
+    uri: {{git-semver-uri}}
+    branch: {{git-semver-branch}}
     file: version
     private_key: ((git_key.private_key))
 
