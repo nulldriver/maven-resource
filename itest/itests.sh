@@ -6,9 +6,10 @@ set -o pipefail
 basedir="$(dirname "$0")"
 . "$basedir/helpers.sh"
 
-export MVN_REPO_URL=https://nexus.nulldriver.com/repository/maven-snapshots
-export MVN_REPO_USERNAME=$(lpass show nexus.nulldriver.com/maven-resource-ci --username)
-export MVN_REPO_PASSWORD=$(lpass show nexus.nulldriver.com/maven-resource-ci --password)
+# Export these vars *before* running this script!
+: "${MVN_REPO_URL:?}"
+: "${MVN_REPO_USERNAME:?}"
+: "${MVN_REPO_PASSWORD:?}"
 
 # 1.0.0-20170328.031519-19
 readonly UNIQUE_SNAPSHOT_PATTERN="\-[0-9]{8}\.[0-9]{6}-[0-9]{1,}"
