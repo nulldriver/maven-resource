@@ -44,6 +44,7 @@ fi
 groupId=$(get_group_id $artifact)
 artifactId=$(get_artifact_id $artifact)
 packaging=$(get_packaging $artifact)
+classifier=$(get_classifier $artifact)
 
 auth=""
 [ -n "$username" ] && auth="--user $username:$password"
@@ -82,7 +83,11 @@ set -e
 
 declare -a versions=( )
 if [[ "$version" = *-SNAPSHOT ]]; then
-  versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/snapshotVersions/snapshotVersion[extension='$packaging']/value/text()" - 2>/dev/null)
+  if [[ -z "$classifier" ]]; then 
+    versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/snapshotVersions/snapshotVersion[extension='$packaging' and not(classifier)]/value/text()" - 2>/dev/null)
+  else
+    versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/snapshotVersions/snapshotVersion[extension='$packaging' and classifier='$classifier']/value/text()" - 2>/dev/null)
+  fi
 elif [ "$version" = "latest" ] || [ -z "$version" ]; then
   versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/versions/version[last()]/text()" - 2>/dev/null)
 else
