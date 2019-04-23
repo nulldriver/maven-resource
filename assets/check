@@ -28,7 +28,7 @@ fi
 release_url=$(jq -r '.source.url //empty' < $payload)
 snapshot_url=$(jq -r '.source.snapshot_url //empty' < $payload)
 artifact=$(jq -r '.source.artifact //empty' < $payload)
-version=$(jq -r '.version.version //empty' < $payload)
+version=$(jq -r '.source.version //.version.version //empty' < $payload)
 username=$(jq -r '.source.username //empty' < $payload)
 password=$(jq -r '.source.password //empty' < $payload)
 skip_cert_check=$(jq -r '.source.skip_cert_check //empty' < $payload)
@@ -69,6 +69,14 @@ if [[ "$version" = *-SNAPSHOT ]]; then
   [ -n "$snapshot_url" ] && url=$snapshot_url
   metadataUrl="$url/${groupId//.//}/$artifactId/$version/maven-metadata.xml"
 else
+  if [ "$version" = "latest-snapshot" ]; then
+    if [ -n "$snapshot_url" ]; then
+      url=$snapshot_url
+    else
+      printf '\e[91m[ERROR]\e[0m invalid payload (must specify snapshot_url)\n'
+      exit 1
+    fi
+  fi
   metadataUrl="$url/${groupId//.//}/$artifactId/maven-metadata.xml"
 fi
 
@@ -88,6 +96,12 @@ if [[ "$version" = *-SNAPSHOT ]]; then
   else
     versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/snapshotVersions/snapshotVersion[extension='$packaging' and classifier='$classifier']/value/text()" - 2>/dev/null)
   fi
+elif [ "$version" = "latest-snapshot" ]; then
+  version=$(echo $metadata | xmllint --xpath "/metadata/versioning/versions/version[last()]/text()" - 2>/dev/null)
+  #The latest snapshot version is now known, so the script may be re-entered with an updated payload to get the unique version.
+  jq --arg version "$version" '.source.version=$version' < $payload | $0 >&3
+  #Second invocation of the script would have written the output, so we are done here.
+  exit $?
 elif [ "$version" = "latest" ] || [ -z "$version" ]; then
   versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/versions/version[last()]/text()" - 2>/dev/null)
 else

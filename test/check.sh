@@ -95,7 +95,53 @@ it_can_check_latest_from_three_versions() {
   '
 }
 
+it_can_check_latest_unique_version_of_particular_snapshot_from_three_versions() {
+
+  local src=$(mktemp -d $TMPDIR/check-src.XXXXXX)
+
+  local repository=$src/remote-repository
+  mkdir -p $repository
+
+  local url=file://$repository
+  local artifact=ci.concourse.maven:maven-resource:jar:standalone
+
+  local version1=$(deploy_artifact $url $artifact '1.0.0-SNAPSHOT' $src)
+  local version2=$(deploy_artifact $url $artifact '1.0.0-SNAPSHOT' $src)
+  local version3=$(deploy_artifact $url $artifact '2.0.0-SNAPSHOT' $src)
+
+  check_artifact $url $artifact '1.0.0-SNAPSHOT' $src | \
+  jq -e \
+  --arg version $version2 \
+  '
+    . == [{version: $version}]
+  '
+}
+
+it_can_check_latest_unique_version_of_latest_snapshot_from_three_versions() {
+
+  local src=$(mktemp -d $TMPDIR/check-src.XXXXXX)
+
+  local repository=$src/remote-repository
+  mkdir -p $repository
+
+  local url=file://$repository
+  local artifact=ci.concourse.maven:maven-resource:jar:standalone
+
+  local version1=$(deploy_artifact $url $artifact '3.0.0-SNAPSHOT' $src)
+  local version2=$(deploy_artifact $url $artifact '4.0.0-SNAPSHOT' $src)
+  local version3=$(deploy_artifact $url $artifact '4.0.0-SNAPSHOT' $src)
+
+  check_artifact $url $artifact 'latest-snapshot' $src | \
+  jq -e \
+  --arg version $version3 \
+  '
+    . == [{version: $version}]
+  '
+}
+
 run it_can_check_from_one_version
 run it_can_check_from_three_versions
 run it_can_check_latest_from_one_version
 run it_can_check_latest_from_three_versions
+run it_can_check_latest_unique_version_of_particular_snapshot_from_three_versions
+run it_can_check_latest_unique_version_of_latest_snapshot_from_three_versions
