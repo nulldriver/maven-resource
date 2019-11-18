@@ -40,7 +40,7 @@ Deploys and retrieve artifacts from a Maven Repository Manager.
 ### `check`: Check for new versions of the artifact.
 
 Checks for new versions of the artifact by retrieving the `maven-metadata.xml` from
-the repository. Check will only look for new versions of the artifact, not any auxillary artifacts such as javadoc.
+the repository. Check will only look for new versions of the artifact, not any auxiliary artifacts such as javadoc.
 
 
 ### `in`: Fetch an artifact from a repository.
@@ -49,7 +49,7 @@ Download the artifact from the repository.
 
 #### Parameters
 
-* `artifactItems`: *Optional.* Map of auxillary artifacts to download alongside the primary artifact. Takes the form _classifier: type_. It's expected auxillary artifacts will follow normal naming conventions. E.g. if the primary artifact is `my-webapp-0.0.1-beta.rc-2.jar`, then the parameter `javadoc: jar` will search for `my-webapp-0.0.1-beta.rc-2-javadoc.jar`.
+* `artifactItems`: *Optional.* Map of auxiliary artifacts to download alongside the primary artifact. Takes the form _classifier: type_. It's expected auxiliary artifacts will follow normal naming conventions. E.g. if the primary artifact is `my-webapp-0.0.1-beta.rc-2.jar`, then the parameter `javadoc: jar` will search for `my-webapp-0.0.1-beta.rc-2-javadoc.jar`.
 
 ``` yaml
 - get: artifact
@@ -74,7 +74,7 @@ Deploy the artifact to the Maven Repository Manager.
 
 * `version_file`: *Required.* The path to the version file
 
-* `files`: *Optional.* Map of paths to auxillary artifacts to upload alongside the primary artifact. Takes the form _classifier: artifact/path-to-artifact_. The packing type will be deduced from the file extension. **Warning**: you will need to be careful with your glob pattern when specifying auxillary artifacts. You'll need to discern between the different file paths. For example, if your primary artifact is `my-artifact-0.2.3.beta-rc.7.jar`, your glob pattern will need to be...
+* `files`: *Optional.* Map of paths to auxiliary artifacts to upload alongside the primary artifact. Takes the form _classifier: artifact/path-to-artifact_. The packing type will be deduced from the file extension. **Warning**: you will need to be careful with your glob pattern when specifying auxiliary artifacts. You'll need to discern between the different file paths. For example, if your primary artifact is `my-artifact-0.2.3.beta-rc.7.jar`, your glob pattern will need to be...
 
 ```yaml
 - put: artifact
@@ -144,7 +144,7 @@ jobs:
       path: artifact/example-webapp-*.jar
 ```
 
-Retrieve an artifact along with auxillary artifacts, then deploy with a GitHub release:
+Retrieve an artifact along with auxiliary artifacts, then deploy with a GitHub release:
 
 ``` yaml
 jobs:
