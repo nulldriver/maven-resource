@@ -67,7 +67,7 @@ Resource configuration for an authenticated repository using a custom cert:
 ``` yaml
 resource_types:
 - name: maven-resource
-  type: docker-image
+  type: registry-image
   source:
     repository: nulldriver/maven-resource
     tag: latest
