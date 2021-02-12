@@ -90,6 +90,8 @@ if [[ "$version" = *-SNAPSHOT ]]; then
   fi
 elif [ "$version" = "latest" ] || [ -z "$version" ]; then
   versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/versions/version[last()]/text()" - 2>/dev/null)
+elif [ "$version" = "release" ] ; then
+  versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/release/text()" - 2>/dev/null)
 else
   itemsCount=$(echo $metadata | xmllint --xpath 'count(/metadata/versioning/versions/version)' - 2>/dev/null)
   found=false
