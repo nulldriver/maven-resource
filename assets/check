@@ -1,7 +1,7 @@
 #!/bin/bash
 # vim: set ft=sh
 
-set -eu
+set -eux
 set -o pipefail
 
 exec 3>&1 # make stdout available as fd 3 for the result
@@ -28,6 +28,7 @@ fi
 release_url=$(jq -r '.source.url //empty' < $payload)
 snapshot_url=$(jq -r '.source.snapshot_url //empty' < $payload)
 artifact=$(jq -r '.source.artifact //empty' < $payload)
+version_filter=$(jq -r '.source.version //".*"' < $payload)
 version=$(jq -r '.version.version //empty' < $payload)
 username=$(jq -r '.source.username //empty' < $payload)
 password=$(jq -r '.source.password //empty' < $payload)
@@ -72,38 +73,31 @@ else
   metadataUrl="$url/${groupId//.//}/$artifactId/maven-metadata.xml"
 fi
 
+metadata=$(mktemp)
 set +e
-metadata=$(curl --fail --silent --show-error $cert $auth $metadataUrl 2>&1)
+curl -o $metadata --fail --silent --show-error $cert $auth $metadataUrl 2>&1
 if [ $? -ne 0 ]; then
-  printf '\e[91m[ERROR]\e[0m %s\n' "$metadata"
+  printf '\e[91m[ERROR]\e[0m %s\n' "$(cat $metadata)"
   printf '\e[91m[ERROR]\e[0m failed to download maven-metadata.xml from: %s\n' "$metadataUrl"
   exit 2
 fi
 set -e
 
-declare -a versions=( )
 if [[ "$version" = *-SNAPSHOT ]]; then
-  if [[ -z "$classifier" ]]; then 
-    versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/snapshotVersions/snapshotVersion[extension='$packaging' and not(classifier)]/value/text()" - 2>/dev/null)
+  if [[ -z "$classifier" ]]; then
+    versions=$(echo "/metadata/versioning/snapshotVersions/snapshotVersion[extension='$packaging' and not(classifier)]/value/text()" | xqilla -i $metadata /dev/stdin 2>/dev/null)
   else
-    versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/snapshotVersions/snapshotVersion[extension='$packaging' and classifier='$classifier']/value/text()" - 2>/dev/null)
+    versions=$(echo "/metadata/versioning/snapshotVersions/snapshotVersion[extension='$packaging' and classifier='$classifier']/value/text()" | xqilla -i $metadata /dev/stdin 2>/dev/null)
   fi
-elif [ "$version" = "latest" ] || [ -z "$version" ]; then
-  versions[1]=$(echo $metadata | xmllint --xpath "/metadata/versioning/versions/version[last()]/text()" - 2>/dev/null)
 else
-  itemsCount=$(echo $metadata | xmllint --xpath 'count(/metadata/versioning/versions/version)' - 2>/dev/null)
-  found=false
-  for (( i=1; i <= $itemsCount; i++ )); do
-
-    current=$(echo $metadata | xmllint --xpath "/metadata/versioning/versions/version[$i]/text()" - 2>/dev/null)
-    if [ "$found" = false ] && [ "$current" = "$version" ]; then
-      found=true
-    fi
-
-    if [ "$found" = true ]; then
-      versions[$i]=$current
-    fi
-  done
+  match_version_filter="matches(text(), '^$version_filter\$')"
+  if [ "$version" = "latest" ] || [ -z "$version" ]; then
+    versions=$(echo "/metadata/versioning/versions/version[$match_version_filter][last()]/text()" | xqilla -i $metadata /dev/stdin 2>/dev/null)
+  else
+    versions=$(echo "/metadata/versioning/versions/version[text()='$version']/(self::version|following-sibling::version[$match_version_filter])/text()" | xqilla -i $metadata /dev/stdin 2>/dev/null)
+  fi
 fi
 
-printf "%s\n" "${versions[@]}" | sed 's/.*/{ "version": "&" }/' | jq --slurp . >&3
+rm -f $metadata
+
+echo "$versions" | sed 's/.*/{ "version": "&" }/' | jq --slurp . >&3
