@@ -110,7 +110,7 @@ it_can_check_filtered_version_from_four_versions() {
   local version3=$(deploy_artifact $url $artifact '2.0.0-rc.1' $src)
   local version4=$(deploy_artifact $url $artifact '21.0.0-rc.1' $src)
 
-  check_artifact_filtered $url $artifact 'latest' $src '1.0.0-.*' | \
+  check_artifact_filtered $url $artifact 'latest' $src '1\.0\.0-.*' | \
   jq -e \
   --arg version $version2 \
   '

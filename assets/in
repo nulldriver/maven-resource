@@ -101,6 +101,8 @@ args="$args -Drepository.url=$url"
 
 $resource_dir/mvnw dependency:copy $args
 
+echo $version > $destination/version
+
 jq -n \
 --arg version "$version" \
 '{

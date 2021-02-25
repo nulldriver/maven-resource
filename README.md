@@ -15,7 +15,7 @@ Deploys and retrieve artifacts from a Maven Repository Manager.
 
 * `artifact`: *Required.* The artifact coordinates in the form of _groupId:artifactId:type[:classifier]_
 
-* `version`: *Optional.* A regular expression matching the entire version of an artifact. If specified only versions matching the regex will be considered. For example `1.0.0-.*` would match all version like `1.0.0-build.123` but not `1.0.0` or `21.0.0-build.123`. Can be used to pin to latest of a major or minor release without bumping to the absolute latest release.
+* `version`: *Optional.* A regular expression matching the entire version of an artifact. If specified only versions matching the regex will be considered. For example `1\.\0\.0-.*` would match all version like `1.0.0-build.123` but not `1.0.0` or `21.0.0-build.123`. Can be used to pin to latest of a major or minor release without bumping to the absolute latest release.
 
 * `username`: *Optional.* Username for accessing an authenticated repository.
 
@@ -49,6 +49,11 @@ the repository.
 
 Download the artifact from the repository.
 
+### Files
+
+ * [artifact]: Named artifact file.
+
+ * version: File containing the version of the artifact.
 
 ### `out`: Deploy artifact to a repository.
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 # vim: set ft=sh
 
-set -eux
+set -eu
 set -o pipefail
 
 exec 3>&1 # make stdout available as fd 3 for the result
@@ -28,7 +28,7 @@ fi
 release_url=$(jq -r '.source.url //empty' < $payload)
 snapshot_url=$(jq -r '.source.snapshot_url //empty' < $payload)
 artifact=$(jq -r '.source.artifact //empty' < $payload)
-version_filter=$(jq -r '.source.version //".*"' < $payload)
+version_pattern=$(jq -r '.source.version //".*"' < $payload)
 version=$(jq -r '.version.version //empty' < $payload)
 username=$(jq -r '.source.username //empty' < $payload)
 password=$(jq -r '.source.password //empty' < $payload)
@@ -90,11 +90,11 @@ if [[ "$version" = *-SNAPSHOT ]]; then
     versions=$(echo "/metadata/versioning/snapshotVersions/snapshotVersion[extension='$packaging' and classifier='$classifier']/value/text()" | xqilla -i $metadata /dev/stdin 2>/dev/null)
   fi
 else
-  match_version_filter="matches(text(), '^$version_filter\$')"
+  match_version_pattern="matches(text(), '^$version_pattern\$')"
   if [ "$version" = "latest" ] || [ -z "$version" ]; then
-    versions=$(echo "/metadata/versioning/versions/version[$match_version_filter][last()]/text()" | xqilla -i $metadata /dev/stdin 2>/dev/null)
+    versions=$(echo "/metadata/versioning/versions/version[$match_version_pattern][last()]/text()" | xqilla -i $metadata /dev/stdin 2>/dev/null)
   else
-    versions=$(echo "/metadata/versioning/versions/version[text()='$version']/(self::version|following-sibling::version[$match_version_filter])/text()" | xqilla -i $metadata /dev/stdin 2>/dev/null)
+    versions=$(echo "/metadata/versioning/versions/version[text()='$version']/(self::version|following-sibling::version[$match_version_pattern])/text()" | xqilla -i $metadata /dev/stdin 2>/dev/null)
   fi
 fi
 
