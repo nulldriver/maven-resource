@@ -51,7 +51,7 @@ Download the artifact from the repository.
 
 ### Files
 
- * [artifact]: Named artifact file.
+ * (artifact): Named artifact file.
 
  * version: File containing the version of the artifact.
 

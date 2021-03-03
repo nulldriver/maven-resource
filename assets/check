@@ -100,4 +100,8 @@ fi
 
 rm -f $metadata
 
-echo "$versions" | sed 's/.*/{ "version": "&" }/' | jq --slurp . >&3
+if [ -z "${versions}" ]; then
+  echo "[]" >&3
+else
+  echo "$versions" | sed 's/.*/{ "version": "&" }/' | jq --slurp . >&3
+fi
