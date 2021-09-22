@@ -91,11 +91,7 @@ if [[ "$version" = *-SNAPSHOT ]]; then
   fi
 else
   match_version_pattern="matches(text(), '^$version_pattern\$')"
-  if [ "$version" = "latest" ] || [ -z "$version" ]; then
-    versions=$(echo "/metadata/versioning/versions/version[$match_version_pattern][last()]/text()" | xqilla -i $metadata /dev/stdin 2>/dev/null)
-  else
-    versions=$(echo "/metadata/versioning/versions/version[text()='$version']/(self::version|following-sibling::version[$match_version_pattern])/text()" | xqilla -i $metadata /dev/stdin 2>/dev/null)
-  fi
+  versions=$(echo "/metadata/versioning/versions/((version[text()='$version']/(self::version|following-sibling::version)[$match_version_pattern])|(version[$match_version_pattern][last()]))/text()" | xqilla -i $metadata /dev/stdin 2>/dev/null)
 fi
 
 rm -f $metadata
