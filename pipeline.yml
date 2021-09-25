@@ -37,8 +37,8 @@ jobs:
       params:
         MVN_REPO_URL: {{repo-url}}
         MVN_SNAPSHOT_URL: {{repo-snapshot-url}}
-        MVN_USERNAME: ((mvn.username))
-        MVN_PASSWORD: ((mvn.password))
+        MVN_USERNAME: ((maven.username))
+        MVN_PASSWORD: ((maven.password))
         MVN_SKIP_CERT_CHECK: {{repo-skip-cert-check}}
         MVN_REPO_CERT: {{repo-cert}}
         MVN_DISABLE_REDEPLOY: {{repo-disable-redeploy}}
