@@ -4,7 +4,7 @@ jobs:
   public: true
   serial_groups: [version]
   plan:
-  - aggregate:
+  - in_parallel:
     - get: maven-resource
       trigger: true
     - get: version
@@ -21,7 +21,7 @@ jobs:
   public: true
   serial_groups: [version]
   plan:
-  - aggregate:
+  - in_parallel:
     - get: project
       resource: maven-resource
       passed: [build]
@@ -53,7 +53,7 @@ jobs:
   public: true
   serial_groups: [version]
   plan:
-  - aggregate:
+  - in_parallel:
     - get: project
       resource: maven-resource
       passed: [test]
