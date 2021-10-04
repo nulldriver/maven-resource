@@ -42,7 +42,7 @@ disable_redeploy=$(jq -r '.source.disable_redeploy //empty' < $payload)
 skip_cert_check=$(jq -r '.source.skip_cert_check //empty' < $payload)
 repository_cert=$(jq -r '.source.repository_cert //empty' < $payload)
 
-file=$(jq -r '.params.file //empty' < $payload)
+file_pattern=$(jq -r '.params.file //empty' < $payload)
 pom_file=$(jq -r '.params.pom_file //empty' < $payload)
 version_file=$(jq -r '.params.version_file //empty' < $payload)
 
@@ -71,14 +71,47 @@ if [ -z "$release_url" ] && [ -z "$snapshot_url" ]; then
   exit 1
 fi
 
-if [ -z "$file" ]; then
+if [ -z "$file_pattern" ]; then
   echo "[ERROR] invalid payload (missing file)"
   exit 1
 fi
 
 # transform this: build-output/your-artifact-*.jar
 #      into this: build-output/your-artifact-1.0.0-rc.0.jar
-file=$(ls $file)
+pick_file() {
+  local matching_file_count
+  matching_file_count=$(find . -path "./$file_pattern" -type f -printf '.' | wc -c)
+
+  local matching_files
+  matching_files=$(find . -path "./$file_pattern" -type f)
+
+  case $matching_file_count in
+    1)
+      file=$(echo "$matching_files" | head -n 1);;
+    0)
+      echo "[ERROR] no file found"
+      exit 1;;
+    *)
+      echo "[WARNING] multiple files found:"
+      echo "$matching_files"
+
+      local filtered_file_count
+      filtered_file_count=$(find . -path "./$file_pattern" -type f | grep -cvE "sources|javadoc")
+
+      if [ "$filtered_file_count" -gt 0 ]; then
+          local filtered_files
+          filtered_files=$(find . -path "./$file_pattern" -type f | grep -vE "sources|javadoc")
+
+          file=$(echo "$filtered_files" | head -n 1)
+      else
+          file=$(echo "$matching_files" | head -n 1)
+      fi
+
+      echo "[INFO] picking file $file";;
+  esac
+}
+
+pick_file
 pom_file=$(ls $pom_file)
 
 if [ -f "$version_file" ]; then
