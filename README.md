@@ -40,12 +40,26 @@ Deploys and retrieve artifacts from a Maven Repository Manager.
 ### `check`: Check for new versions of the artifact.
 
 Checks for new versions of the artifact by retrieving the `maven-metadata.xml` from
-the repository.
+the repository. Check will only look for new versions of the artifact, not any auxiliary artifacts such as javadoc.
 
 
 ### `in`: Fetch an artifact from a repository.
 
 Download the artifact from the repository.
+
+#### Parameters
+
+* `artifactItems`: *Optional.* Map of auxiliary artifacts to download alongside the primary artifact. Takes the form _classifier: type_. It's expected auxiliary artifacts will follow normal naming conventions. E.g. if the primary artifact is `my-webapp-0.0.1-beta.rc-2.jar`, then the parameter `javadoc: jar` will search for `my-webapp-0.0.1-beta.rc-2-javadoc.jar`.
+
+``` yaml
+- get: artifact
+  params:
+    artifactItems:
+      javadoc: jar
+      sources: jar
+      diagram: pdf
+      classifier: packagingType
+```
 
 
 ### `out`: Deploy artifact to a repository.
@@ -59,6 +73,16 @@ Deploy the artifact to the Maven Repository Manager.
 * `pom_file`: *Recommended.* The path to the pom.xml to deploy with the artifact.
 
 * `version_file`: *Required.* The path to the version file
+
+* `files`: *Optional.* Map of paths to auxiliary artifacts to upload alongside the primary artifact. Takes the form _classifier: artifact/path-to-artifact_. The packing type will be deduced from the file extension. **Warning**: you will need to be careful with your glob pattern when specifying auxiliary artifacts. You'll need to discern between the different file paths. For example, if your primary artifact is `my-artifact-0.2.3.beta-rc.7.jar`, your glob pattern will need to be...
+
+```yaml
+- put: artifact
+  params:
+    file: artifact/my-artifact-*[0-9].*[0-9].*[0-9]-beta.*[0-9].jar
+    files:
+      javadoc: artifact/my-artifact-*-javadoc.jar
+```
 
 ## Examples
 
@@ -118,4 +142,27 @@ jobs:
     params:
       manifest: source-code/manifest.yml
       path: artifact/example-webapp-*.jar
+```
+
+Retrieve an artifact along with auxiliary artifacts, then deploy with a GitHub release:
+
+``` yaml
+jobs:
+- name: my-job
+  plan:
+  - get: source-code
+  - get: artifact
+    trigger: true
+    params:
+      artifactItems:
+        javadoc: jar
+        stubs: jar
+        diagram: pdf
+  - task: generate-github-release
+    file: pipeline-tasks/generate-github-release/task.yml
+  - put: gh-release
+    params:
+      name: task-output/release-name
+      tag: task-output/release-tag
+      globs: [artifact/example-webapp-*]
 ```
