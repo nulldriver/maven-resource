@@ -22,6 +22,8 @@ it_can_get_artifact() {
   '
     .version == {version: $version}
   '
+  local actual_version=$(cat $src/version)
+  [ "$version" == "$actual_version" ]
 }
 
 run it_can_get_artifact
