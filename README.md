@@ -45,7 +45,11 @@ the repository.
 
 ### `in`: Fetch an artifact from a repository.
 
-Download the artifact from the repository.
+Places the following files in the destination:
+
+- (artifact): The artifact fetched from the repository.
+
+- version: The artifact's version.
 
 
 ### `out`: Deploy artifact to a repository.

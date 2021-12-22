@@ -24,4 +24,22 @@ it_can_get_artifact() {
   '
 }
 
+it_provides_a_version_file_when_getting_artifact() {
+
+  local src=$(mktemp -d $TMPDIR/check-src.XXXXXX)
+
+  local repository=$src/remote-repository
+  mkdir -p $repository
+
+  local url=file://$repository
+  local artifact=ci.concourse.maven:maven-resource:jar:standalone
+
+  local version=$(deploy_artifact $url $artifact '1.0.0' $src)
+
+  get_artifact $url $artifact $version $src
+
+  if [ $(cat version) != $version ]; then exit 1; fi
+}
+
 run it_can_get_artifact
+run it_provides_a_version_file_when_getting_artifact
