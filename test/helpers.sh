@@ -38,6 +38,9 @@ increment_unique_id() {
   UNIQUE_ID=$((UNIQUE_ID + 1))
 }
 
+# 1.0.0-20170328.031519-19
+readonly UNIQUE_SNAPSHOT_PATTERN="\-[0-9]{8}\.[0-9]{6}-[0-9]{1,}"
+
 to_filename() {
   local artifact=$1
   local version=$2
@@ -79,7 +82,14 @@ deploy_artifact() {
   # cleanup dummy file
   rm $file
 
-  echo $version
+  if [[ "$version" = *-SNAPSHOT ]]; then
+    #Find the unique version of what was just deployed
+    artifactDir=${url#*file://}/$(echo $groupId | sed 's/\./\//g')/$artifactId/$version
+    uniqueVersion=$(ls -t $artifactDir/*.pom | head -n 1 | grep -oE "$UNIQUE_SNAPSHOT_PATTERN")
+    echo "${version%-SNAPSHOT*}${uniqueVersion}"
+  else
+    echo $version
+  fi
 }
 
 deploy_artifact_to_manager_with_pom() {
@@ -146,6 +156,7 @@ check_artifact() {
   '{
     source: {
       url: $url,
+      snapshot_url: $url,
       artifact: $artifact
     },
     version: {

@@ -16,9 +16,6 @@ source $BASE_DIR/test/helpers.sh
 : "${MVN_REPO_CERT:=}"
 : "${MVN_DISABLE_REDEPLOY:=false}"
 
-# 1.0.0-20170328.031519-19
-readonly UNIQUE_SNAPSHOT_PATTERN="\-[0-9]{8}\.[0-9]{6}-[0-9]{1,}"
-
 it_can_deploy_snapshot_using_url() {
 
   local project=$BASE_DIR/test/fixtures/project
