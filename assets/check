@@ -64,7 +64,7 @@ if [ -n "$uniqueVersion" ]; then
   version=$(echo ${version%-$uniqueVersion}-SNAPSHOT)
 fi
 
-url=$release_url
+url=${release_url:-${snapshot_url}}
 if [[ "$version" = *-SNAPSHOT ]]; then
   [ -n "$snapshot_url" ] && url=$snapshot_url
   metadataUrl="$url/${groupId//.//}/$artifactId/$version/maven-metadata.xml"
